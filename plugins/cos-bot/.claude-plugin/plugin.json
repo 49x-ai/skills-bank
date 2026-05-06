@@ -1,6 +1,6 @@
 {
   "name": "cos-bot",
-  "description": "Guided Telegram bot creation. Drives BotFather, hands the token to /telegram:configure, walks the user to pairing. Also installs five Chief-of-Staff recipe commands.",
+  "description": "Wire a Telegram bot to Claude Code in two ways: /cos-bot:setup creates a new bot from scratch (drives BotFather end-to-end), /cos-bot:connect is the fast path for users who already have a token. Both hand off to /telegram:configure, background the channel server, and walk pairing. Also installs five Chief-of-Staff recipe commands.",
   "version": "0.1.0",
   "author": {
     "name": "49x.ai"

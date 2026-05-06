@@ -1,15 +1,28 @@
 # cos-bot — Guided Telegram bot setup + Chief of Staff recipes
 
-A plugin that compresses the 25-minute Telegram bot bootstrap into a
-single guided skill. Replaces the manual BotFather phone dance with a
-stepped, resumable orchestration that hands off to the official
-`telegram` plugin's `/telegram:configure` and `/telegram:access pair`
-skills for the parts they already do well.
+A plugin that compresses the Telegram bot bootstrap into a guided,
+resumable skill. Hands off to the official `telegram` plugin's
+`/telegram:configure` and `/telegram:access pair` for the parts they
+already do well, and covers the parts they don't (BotFather drive,
+metadata, channel-server backgrounding, pairing UX).
 
-This plugin ships **two skills**: `/cos-bot:setup` (the bot-bootstrap
-orchestration, documented below) and `/cos-bot:install-recipes` (a
-guided installer for five Chief-of-Staff recipe commands — `/prep`,
-`/inbox-triage`, `/awaiting`, `/who`, `/catchup`). The installer reads
+## Two ways in
+
+Pick the one that matches your starting state:
+
+- **Don't have a bot yet:** `/cos-bot:setup` — drives BotFather
+  end-to-end (`/newbot`, metadata, the works), captures the token,
+  configures, relaunches, pairs.
+- **Already have a token from BotFather:** `/cos-bot:connect` — the
+  fast path. Skips BotFather drive and metadata, goes straight to
+  configure → relaunch → pair.
+
+Both share state at `~/.claude/channels/telegram/.cos-bot-setup.json`,
+so you can switch mid-flow if you picked the wrong one.
+
+This plugin also ships `/cos-bot:install-recipes` — a guided installer
+for five Chief-of-Staff recipe commands (`/prep`, `/inbox-triage`,
+`/awaiting`, `/who`, `/catchup`). The installer reads
 canonical recipe bodies bundled with the plugin, walks the user
 through a small profile pass (VIPs, draft tone, stack,
 internal/external mix) and per-recipe deltas, applies deterministic
@@ -45,6 +58,33 @@ State persists at `~/.claude/channels/telegram/.cos-bot-setup.json` (mode
 `0600`). Re-running `/cos-bot:setup` resumes at the last incomplete step.
 `/cos-bot:setup reset` clears state. `/cos-bot:setup step <name>` jumps to
 a specific step (debug only).
+
+If you start `/cos-bot:setup` and it detects an existing token at
+`~/.claude/channels/telegram/.env`, it offers to redirect you to
+`/cos-bot:connect` (the faster path for that case). Decline if you want
+to overwrite the existing token with a new bot.
+
+## What `/cos-bot:connect` does
+
+`/cos-bot:connect` is the fast path for users who already have a token
+from BotFather. It runs three steps from the same shared state file:
+
+1. **configure** — invokes `/telegram:configure <token>` to write
+   `~/.claude/channels/telegram/.env`.
+2. **relaunch** — backgrounds `claude --channels …` (tmux preferred,
+   `script(1)` fallback) or asks you to `/exit` + relaunch.
+3. **pair** — DM the bot, run `/telegram:access pair <code>`, optionally
+   lock down with `/telegram:access policy allowlist`.
+
+It detects an already-populated `.env` at startup and offers to skip
+straight to relaunch + pairing — useful when re-pairing after a plugin
+uninstall or token rotation done elsewhere.
+
+The connect skill does **not** drive BotFather and does **not** set bot
+metadata (description / about / commands / privacy). If you want to
+update those on an existing bot, message `@BotFather` directly with
+`/setdescription`, `/setabouttext`, `/setcommands`, `/setprivacy`, and
+`/setjoingroups`.
 
 ## Two execution modes
 
@@ -82,7 +122,7 @@ Claude Code session:
 ```
 
 `claude plugin list` should then show `cos-bot@49x-skills` as enabled,
-and `/cos-bot:setup` is available.
+and both `/cos-bot:setup` and `/cos-bot:connect` are available.
 
 ### What gets installed alongside
 
@@ -100,8 +140,9 @@ and `/cos-bot:setup` is available.
 
 ## After setup — using the bot
 
-Once `/cos-bot:setup` finishes, the bot is fully wired. To use it in any
-future Claude Code session, launch with the channels flag:
+Once `/cos-bot:setup` (or `/cos-bot:connect`) finishes, the bot is fully
+wired. To use it in any future Claude Code session, launch with the
+channels flag:
 
 ```bash
 claude --channels plugin:telegram@claude-plugins-official
@@ -112,9 +153,11 @@ your bot won't reach Claude. Token and allowlist persist in
 `~/.claude/channels/telegram/`; the only thing you need to remember is
 the launch flag.
 
-The `cos-bot` plugin only exists to bootstrap new bots. You can:
+The `cos-bot` plugin only exists to bootstrap and reconnect bots. You
+can:
 
 - **Leave it installed** — handy if you ever need to create another bot
+  (`/cos-bot:setup`), wire a different existing token (`/cos-bot:connect`),
   or re-run pairing.
 - **Uninstall it** — via `/plugin uninstall cos-bot@49x-skills`. The
   bot, token, and allowlist all remain functional; only the

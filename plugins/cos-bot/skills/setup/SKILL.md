@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Guided Telegram bot creation for the Chief of Staff workshop — drives BotFather end-to-end, hands the token to /telegram:configure, walks the user to pairing. Use when the user asks to "set up Telegram bot," "create bot with BotFather," "guided telegram setup," or starts fresh on the bot bootstrap.
+description: Create a new Telegram bot from scratch (drives BotFather) and wire it to Claude Code. Use when the user does not yet have a bot — the skill drives /newbot end-to-end, captures the token, hands it to /telegram:configure, and walks the user to pairing. If the user already has a token, route to /cos-bot:connect instead.
 user-invocable: true
 allowed-tools:
   - Read
@@ -114,6 +114,33 @@ Path: `~/.claude/channels/telegram/.cos-bot-setup.json`. Schema:
 Before doing anything else, verify the dependencies the skill hands off
 to. **Run this on every invocation, not just first run** — the user may
 have uninstalled `telegram` between runs.
+
+### Redirect: existing token detected
+
+This skill drives `@BotFather` to create a **new** bot. If a token is
+already configured on the box, the user almost certainly wants
+`/cos-bot:connect` instead — that's the fast path (configure → relaunch
+→ pair, no BotFather drive, no metadata).
+
+Check `~/.claude/channels/telegram/.env` for a populated `BOT_TOKEN`
+(or `TELEGRAM_BOT_TOKEN`) matching `\d+:[A-Za-z0-9_-]{30,}`. If
+present, surface (via `AskUserQuestion`):
+
+> A token is already configured at
+> `~/.claude/channels/telegram/.env`. `/cos-bot:connect` is the
+> faster path for this case — it skips BotFather drive and metadata
+> and goes straight to relaunch + pairing. Switch?
+>
+> - **Yes — switch to `/cos-bot:connect`** (recommended)
+> - **No — continue with `/cos-bot:setup`** (will overwrite the
+>   existing token at step 4)
+
+If yes: print *"Run `/cos-bot:connect` to continue."* and stop
+cleanly. Do not write state.
+
+If no: continue with the rest of Step 0. The overwrite path is
+preserved — step 4 will replace the existing `.env` with the new
+token captured in step 2.
 
 ### Required: the `telegram` plugin
 

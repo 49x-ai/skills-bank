@@ -25,6 +25,7 @@ Then install individual plugins from the list below.
 - **For:** anyone wiring a personal Telegram bot to Claude Code, or standing up a lightweight Chief-of-Staff workflow on top of it.
 - **Key commands:**
   - `/cos-bot:setup` — drives BotFather end-to-end (Claude for Chrome or `chrome-devtools-mcp`), captures the token, hands it to `/telegram:configure`, walks you through pairing.
+  - `/cos-bot:connect` — fast path for users who already have a BotFather token. Ensures the telegram plugin is installed, configures, backgrounds the channel, and walks pairing. Skips BotFather drive and metadata.
   - `/cos-bot:install-recipes` — installs `/prep`, `/inbox-triage`, `/awaiting`, `/who`, `/catchup` as personalized commands in your project, with a small profile pass so they fit your stack and tone.
 - **Install:**
   ```
