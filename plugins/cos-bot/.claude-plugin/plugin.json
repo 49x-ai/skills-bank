@@ -1,0 +1,13 @@
+{
+  "name": "cos-bot",
+  "description": "Guided Telegram bot creation. Drives BotFather, hands the token to /telegram:configure, walks the user to pairing. Also installs five Chief-of-Staff recipe commands.",
+  "version": "0.1.0",
+  "author": {
+    "name": "49x.ai"
+  },
+  "keywords": [
+    "telegram",
+    "botfather",
+    "chief-of-staff"
+  ]
+}
