@@ -1,16 +1,13 @@
 {
   "name": "cos-bot",
   "description": "Wires a Telegram bot to Claude Code and installs Chief-of-Staff recipes. The headline path is /cos-bot:start — inspects state and chains the right next step (setup OR connect → install-recipes with defaults → demo). /cos-bot:setup creates a new bot from scratch; /cos-bot:connect is the fast path for an existing token; /cos-bot:install-recipes drops personalized command files into your project (and owns persona writes via `persona [preset|tune|show|reset]`); /cos-bot:demo fires one recipe through Telegram to prove the loop end-to-end. Ships a chief-of-staff sub-agent that recipes inherit.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": {
     "name": "49x.ai",
     "url": "https://49x.ai"
   },
   "homepage": "https://github.com/49x-ai/skills-bank/tree/main/plugins/cos-bot",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/49x-ai/skills-bank.git"
-  },
+  "repository": "https://github.com/49x-ai/skills-bank.git",
   "keywords": [
     "telegram",
     "botfather",
