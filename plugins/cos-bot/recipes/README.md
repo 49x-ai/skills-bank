@@ -1,18 +1,27 @@
 # Recipes — index
 
 The canonical bodies for every Chief of Staff slash command. The
-`chief-of-staff` sub-agent inherits them all.
+`chief-of-staff` sub-agent (shipped at
+`${CLAUDE_PLUGIN_ROOT}/agents/chief-of-staff.md`) inherits them all and
+modulates output via the persona stored in `feedback_persona.md`. See
+*Persona layer* below.
 
 ## How to install
 
+The headline path is `/cos-bot:start` — it inspects your current
+state and dispatches the right next command. For direct installs:
+
 Run `/cos-bot:install-recipes` for a guided install of the five
 expansion-pack recipes (`/prep`, `/inbox-triage`, `/awaiting`, `/who`,
-`/catchup`) — it asks a small profile pass once, applies your choices
-to the canonical bodies, writes them to `<your-project>/.claude/commands/`,
-persists durable answers as typed memory, and offers to schedule the
-routines. Pass `all` for stock defaults (`/cos-bot:install-recipes
-all`) or a single slug for one recipe (`/cos-bot:install-recipes
-prep`).
+`/catchup`). The installer leads with one question — *"all five with
+sensible defaults, or pick & tweak?"* — so most users finish in ~4
+question moments. Pass `all` for stock defaults
+(`/cos-bot:install-recipes all`) or a single slug for one recipe
+(`/cos-bot:install-recipes prep`).
+
+After install, run `/cos-bot:demo` to fire one recipe right now and
+DM the result to your Telegram in a minute or two — proves the loop
+end-to-end.
 
 For the four spine recipes (`/brief`, `/shutdown`, `/weekly-review`,
 `/tackle`) and anything not covered by the installer, paste each body
@@ -28,6 +37,47 @@ ASCII checkmarks for write summaries.
 - Hard rule: never auto-send, never auto-decide.
 - Always cite source IDs (event ID, thread ID, issue ID).
 - Editorial bullets allowed and labeled as such.
+
+## Persona layer
+
+The above rules are non-negotiable. The persona layer sits underneath
+them — it modulates *how* the agent speaks within those constraints.
+
+Persona axes live in `feedback_persona.md` under the project's memory
+directory:
+
+- **Formality** (`terse` / `friendly` / `formal`) — draft tone register.
+- **Proactivity** (`proactive` / `reactive`) — whether to surface
+  editorial bullets ("one thing I might miss") unprompted, or stick to
+  the literal ask.
+- **Name** — the bot's self-reference. Empty = no sign-off.
+- **Reasoning hint** (`conclusion-first` / `chronological` / `none`) —
+  structure on memo-style recipes (`/tackle`, `/catchup` long form).
+
+Set this file via `/cos-bot:install-recipes` (asks for a preset on
+the way through) or `/cos-bot:install-recipes persona [preset|tune|show|reset]`
+(preset + per-axis tuning anytime). The chief-of-staff sub-agent
+reads the file fresh on every recipe run.
+
+**Legacy `feedback_tone.md`** — earlier versions of cos-bot wrote a
+single-axis tone file. The agent still reads it as a fallback when
+`feedback_persona.md` is absent, but new installs go straight to the
+persona file. Run `/cos-bot:install-recipes persona tune` to upgrade.
+
+## Brain-dump capture
+
+When you DM the bot a long message — voice-memo transcription, late-night
+strategy thinking, anything ≥200 words — the chief-of-staff sub-agent
+captures it verbatim to `<project>/.claude/projects/<slug>/memory/brain-dumps/YYYY-MM-DD-HH-MM-<slug>.md`
+*before* processing it. Short messages and slash commands aren't
+captured. The agent's reply leads with one line confirming the capture
+("captured to brain-dumps/2026-05-08-1142-q3-roadmap-thoughts.md") and
+then continues normal processing.
+
+This is **on by default**. To turn it off, run
+`/cos-bot:install-recipes persona tune` and set "Brain-dump capture"
+to off — the agent reads the flag from `feedback_persona.md` on every
+inbound message.
 
 ## Cadence — scheduled
 
