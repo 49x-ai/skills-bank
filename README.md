@@ -1,10 +1,11 @@
 # skills-bank
 
-**Public Claude Code plugins from [49x.ai](https://49x.ai) — an AI Studio shipping custom AI workflows.**
+**Plugins for Claude Code, from [49x.ai](https://49x.ai).**
 
-A [Claude Code marketplace](https://docs.claude.com/en/docs/claude-code/plugin-marketplaces)
-that bundles the plugins we build for ourselves and our clients, then publish when
-they're useful past one project.
+A small [Claude Code marketplace](https://docs.claude.com/en/docs/claude-code/plugin-marketplaces)
+of workflow plugins — the reusable bits that fall out of building custom
+AI for our clients. The kind of thing that's annoying enough to wire up
+by hand that we'd rather hand you the install command.
 
 ## Add the marketplace
 
@@ -14,38 +15,70 @@ In any Claude Code session:
 /plugin marketplace add 49x-ai/skills-bank
 ```
 
-Then install individual plugins from the list below.
+Then install whichever plugins you want from the list below.
 
-## What's inside
+## Plugins
 
-### cos-bot  ·  v0.1.0
+### cos-bot · v0.2
 
-**Compresses the 25-minute Telegram-bot bootstrap into a guided, resumable skill — and installs five Chief-of-Staff recipe commands on the way out.**
+**A Telegram bot that's also a Chief of Staff.**
 
-- **For:** anyone wiring a personal Telegram bot to Claude Code, or standing up a lightweight Chief-of-Staff workflow on top of it.
-- **Key commands:**
-  - `/cos-bot:setup` — drives BotFather end-to-end (Claude for Chrome or `chrome-devtools-mcp`), captures the token, hands it to `/telegram:configure`, walks you through pairing.
-  - `/cos-bot:connect` — fast path for users who already have a BotFather token. Ensures the telegram plugin is installed, configures, backgrounds the channel, and walks pairing. Skips BotFather drive and metadata.
-  - `/cos-bot:install-recipes` — installs `/prep`, `/inbox-triage`, `/awaiting`, `/who`, `/catchup` as personalized commands in your project, with a small profile pass so they fit your stack and tone. Four spine recipes (`/brief`, `/shutdown`, `/weekly-review`, `/tackle`) ship as canonical bodies for manual paste — see [`plugins/cos-bot/recipes/`](plugins/cos-bot/recipes/).
-- **Install:**
-  ```
-  /plugin install cos-bot@49x-skills
-  ```
-- **Details:** [plugins/cos-bot/](plugins/cos-bot/)
+DM `/catchup` after a long weekend → it tells you what you missed.
+Schedule `/brief` for 8am → it pings your phone with today's calendar,
+top emails, and one thing you might miss. Tell it `/who jane@acme.com`
+before a meeting → it builds the dossier. Drafts in your voice. Never
+auto-sends.
 
-> Requires the `telegram@claude-plugins-official` plugin for the configure and pair steps. `cos-bot` detects it on startup and offers to install it if missing. The bundled `chrome-devtools-mcp` server registers automatically.
+About five minutes from install to a paired bot DMing you back.
 
-## Built by 49x.ai
+```
+/plugin install cos-bot@49x-skills
+/cos-bot:start
+```
 
-[49x.ai](https://49x.ai) is an AI Studio. We design and ship custom AI workflows for
-operators and teams — the skills in this marketplace are the reusable pieces that
-fall out of that work.
+`/cos-bot:start` inspects your current state — no token? token but no
+pairing? recipes not installed? — and tells you the next command. Most
+users finish in ~4 question moments and a demo DM lands on their
+phone.
 
-If you want help applying AI to your own business — strategy, prototyping, or
-shipping the production version of something like one of these skills —
-[talk to us at 49x.ai](https://49x.ai).
+**What's in the box:**
+
+- **Five Chief-of-Staff recipes** — `/prep`, `/inbox-triage`,
+  `/awaiting`, `/who`, `/catchup`. Schedule them or fire on demand.
+- **Three voice presets** — MBB Consultant, Warm Exec Assistant, Blunt
+  Chief of Staff. Tunable down to four axes (formality, proactivity,
+  name, reasoning hint).
+- **Brain-dump capture** — DM the bot a voice-memo transcript or
+  late-night strategy thinking, it's saved verbatim before it gets
+  processed.
+- **Guided BotFather drive** — `/cos-bot:setup` walks `@BotFather`
+  end-to-end via Claude for Chrome (or an isolated MCP-driven Chromium
+  fallback). Already have a token? `/cos-bot:connect` skips that step.
+
+Output is Telegram-shaped — plain text, scannable on a phone, no
+markdown headers, no emoji. Drafts get labeled `DRAFT — not sent` and
+the bot never decides for you.
+
+[Read the cos-bot README →](plugins/cos-bot/)
+
+> Requires `telegram@claude-plugins-official` for the configure + pair
+> steps. `cos-bot` detects it on startup and offers to install it if
+> missing. The bundled `chrome-devtools-mcp` server registers
+> automatically.
+
+## Why we publish these
+
+We're an AI studio — we design and ship custom AI workflows for
+operators and teams. When something we build for one client is useful
+past that project, we strip it down, harden the UX, and publish it
+here.
+
+If you'd want help applying AI to your own business — strategy,
+prototyping, or shipping the production version of something like one
+of these — [talk to us at 49x.ai](https://49x.ai).
 
 ## Roadmap
 
-Driven by client work, so the queue shifts. If there's a skill you'd want us to
-publish, [open an issue](https://github.com/49x-ai/skills-bank/issues).
+Driven by client work, so the queue shifts. If there's a workflow
+you'd want us to publish, [open an
+issue](https://github.com/49x-ai/skills-bank/issues).
