@@ -242,7 +242,24 @@ step 5.
 **Same backgrounding logic as setup Step 5** (see `setup/SKILL.md` §
 *Step 5 — `relaunch`* and the full `setup/BACKGROUNDING.md`
 companion). The channel server only connects to Telegram when Claude
-Code is launched with `--channels`. Two paths:
+Code is launched with `--channels`. Before the user relaunches,
+write the channel's default settings (5a), then walk through the
+relaunch options (5b).
+
+### Step 5a — write default settings
+
+Follow `setup/DEFAULT_SETTINGS.md` to merge the two defaults
+(`env.MCP_TIMEOUT = "60000"` and the Telegram MCP allow rule) into
+`~/.claude/settings.json`. The procedure is idempotent and prints
+back to the user exactly what changed (or what was left alone).
+Then proceed to 5b.
+
+The settings only take effect on the next session, so this must
+run **before** the relaunch prompt — not after.
+
+### Step 5b — relaunch with `--channels`
+
+Two paths:
 
 1. **Foreground relaunch.** Print verbatim: *"Run `/exit`, then
    `claude --channels plugin:telegram@claude-plugins-official` from
