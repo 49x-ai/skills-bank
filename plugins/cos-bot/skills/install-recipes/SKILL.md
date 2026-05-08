@@ -360,6 +360,50 @@ orchestration shape:
 
 ---
 
+## Step 7a — restart background bot
+
+Before printing the final summary, try to restart the user's
+backgrounded `claude --channels …` session so it loads the
+freshly-written `.claude/commands/` files. Keep this best-effort:
+treat any tmux/script error as soft and fall through to the
+`"skipped"` branch rather than failing the install.
+
+1. **Detect tmux session.** `tmux has-session -t cos-bot 2>/dev/null`
+   (exit 0 = exists).
+   - Capture the running pane's working directory:
+     `tmux display-message -p -F '#{pane_current_path}' -t cos-bot`
+     (use `pane_current_path`, not `session_path` — the user may have
+     `cd`'d after launch).
+   - `tmux kill-session -t cos-bot`
+   - `tmux new-session -d -s cos-bot -c "<captured-pane-path>" 'claude --channels plugin:telegram@claude-plugins-official --dangerously-skip-permissions; exec zsh'`
+   - Poll for `Listening for channel messages…` with 250 ms × 60
+     attempts (15 s ceiling, early exit on match):
+     `tmux capture-pane -p -t cos-bot | grep -q "Listening for channel messages"`.
+     Use session-level target `cos-bot` (not `cos-bot:0`) to dodge
+     custom window names. Cold Claude startup with model download /
+     plugin load can take 10–20 s.
+   - On match → `state.botRestarted = "tmux"`. On 15 s timeout →
+     `state.botRestarted = "tmux-pending"` (still better than nothing
+     — backlog will drain when it does start).
+
+2. **If tmux had no `cos-bot` session, try `script(1)` detection.**
+   `pgrep -f "script.*claude --channels.*plugin:telegram@claude-plugins-official"`.
+   - If a PID exists, `kill <pid>`, then re-launch the canonical
+     block:
+     `mkdir -p /tmp/cos-bot && nohup script -q /tmp/cos-bot/claude-channel.log claude --channels plugin:telegram@claude-plugins-official > /dev/null 2>&1 & disown`.
+   - On success → `state.botRestarted = "script"`. Don't try to
+     verify "Listening" via the script log — recovery is best-effort;
+     tell the user to peek with
+     `strings /tmp/cos-bot/claude-channel.log | tail -3` if they want.
+
+3. **Neither method matched** → `state.botRestarted = "skipped"`. The
+   user wasn't running the bot in the background; no action needed.
+
+The summary in Step 7 reads `state.botRestarted` to render its
+restart line — see the table below.
+
+---
+
 ## Step 7 — `done`
 
 Set `state.step = "done"`, persist. Print a final summary:
@@ -401,11 +445,18 @@ The chief-of-staff sub-agent inherits these automatically. To tune the
 persona, run /cos-bot:install-recipes persona tune. Re-run
 /cos-bot:install-recipes any time to revise — it's idempotent.
 
-Heads up: if a `claude --channels …` session is already running in
-tmux, restart it so it loads the freshly-written .claude/commands/
-files. Otherwise inbound DMs to the bot won't recognize the slash
-commands and will fall back to free-form reasoning.
+<restart-line>
 ```
+
+The final line above is rendered conditionally on
+`state.botRestarted` (set by Step 7a):
+
+| `state.botRestarted` | `<restart-line>` body |
+|---|---|
+| `"tmux"` | `Bot restarted (tmux: cos-bot) — recipes are live; inbound DMs will recognize the new slash commands.` |
+| `"tmux-pending"` | ``Restarted tmux:cos-bot but didn't see "Listening…" within 15s — give it another 30s, then peek with `tmux capture-pane -p -t cos-bot \| tail -10`.`` |
+| `"script"` | ``Bot restarted (script(1) PID <new-pid>) — peek with `strings /tmp/cos-bot/claude-channel.log \| tail -3` to confirm.`` |
+| `"skipped"` | ``No backgrounded `claude --channels …` session detected — when you start one later, it'll pick up the recipes automatically.`` |
 
 Omit empty sections (no scheduled? no `Scheduled:` block at all).
 
