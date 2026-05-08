@@ -6,7 +6,7 @@
 
 ## Slash-command body
 
-Paste into `chiefofstaff/.claude/commands/catchup.md`:
+Paste into `.claude/commands/catchup.md` (or run `/cos-bot:install-recipes catchup`):
 
 ```markdown
 ---

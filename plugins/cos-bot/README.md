@@ -121,8 +121,8 @@ Claude Code session:
 /reload-plugins
 ```
 
-`claude plugin list` should then show `cos-bot@49x-skills` as enabled,
-and both `/cos-bot:setup` and `/cos-bot:connect` are available.
+`/plugin list` should then show `cos-bot@49x-skills` as enabled, and
+both `/cos-bot:setup` and `/cos-bot:connect` are available.
 
 ### What gets installed alongside
 

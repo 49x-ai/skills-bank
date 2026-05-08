@@ -2,13 +2,13 @@
   "name": "49x-skills",
   "owner": { "name": "49x-ai" },
   "metadata": {
-    "description": "Public Claude Code plugins from 49x.ai.",
+    "description": "Workflow plugins from 49x.ai for operators — Telegram bots, Chief-of-Staff routines, and other custom AI workflows.",
     "version": "0.1.0"
   },
   "plugins": [
     {
       "name": "cos-bot",
-      "description": "Guided Telegram bot creation. Drives BotFather, hands the token to /telegram:configure, walks the user to pairing. Also installs five Chief-of-Staff recipe commands.",
+      "description": "Guided Telegram bot setup (drives BotFather, hands the token to /telegram:configure, walks pairing) plus a Chief-of-Staff recipe installer.",
       "version": "0.1.0",
       "author": { "name": "49x.ai" },
       "source": "./plugins/cos-bot",

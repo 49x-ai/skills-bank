@@ -13,7 +13,7 @@
 
 ## Slash-command body
 
-Paste into `chiefofstaff/.claude/commands/inbox-triage.md`:
+Paste into `.claude/commands/inbox-triage.md` (or run `/cos-bot:install-recipes inbox-triage`):
 
 ```markdown
 ---

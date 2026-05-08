@@ -1,17 +1,18 @@
 # Recipe — End-of-day shutdown (6pm, weekdays)
 
-> Canonical body for the `/shutdown` slash command and the Stage 5 S routine. Paste from here; customize lightly.
+> Canonical body for the `/shutdown` slash command. Paste from here;
+> customize lightly.
 
 ## Routine metadata (for `/schedule`)
 
-- **Name:** `end-of-day-shutdown`
+- **Name:** `shutdown` (matches the slash command)
 - **Cron:** `0 18 * * 1-5` (every weekday at 6pm local time)
 - **Agent to invoke:** `chief-of-staff`
 - **Output target:** your Telegram chat-id
 
 ## Slash-command body
 
-Paste into `chiefofstaff/.claude/commands/shutdown.md`:
+Paste into `.claude/commands/shutdown.md`:
 
 ```markdown
 ---

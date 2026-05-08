@@ -1,17 +1,18 @@
 # Recipe — Morning brief (8am, weekdays)
 
-> Canonical body for the `/brief` slash command and the Stage 5 Q routine. Paste from here; customize lightly. The CoS sub-agent inherits this recipe via Stage 4.
+> Canonical body for the `/brief` slash command. Paste from here;
+> customize lightly. The `chief-of-staff` sub-agent inherits this recipe.
 
 ## Routine metadata (for `/schedule`)
 
-- **Name:** `morning-brief`
+- **Name:** `brief` (matches the slash command)
 - **Cron:** `0 8 * * 1-5` (every weekday at 8am local time)
-- **Agent to invoke:** `chief-of-staff` (or `chief-of-staff-lite` if you went Q in Stage 4)
+- **Agent to invoke:** `chief-of-staff`
 - **Output target:** your Telegram chat-id (from `~/.claude/channels/telegram/access.json`)
 
 ## Slash-command body
 
-Paste this into `chiefofstaff/.claude/commands/brief.md`:
+Paste this into `.claude/commands/brief.md`:
 
 ```markdown
 ---

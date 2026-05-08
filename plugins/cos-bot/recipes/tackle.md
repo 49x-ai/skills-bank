@@ -4,7 +4,7 @@
 
 ## Slash-command body
 
-Paste into `chiefofstaff/.claude/commands/tackle.md`:
+Paste into `.claude/commands/tackle.md`:
 
 ```markdown
 ---
@@ -49,3 +49,17 @@ Three options:
 ## Why this recipe matters
 
 `/brief` and `/shutdown` are the cadence — they fire on a schedule. `/tackle` is the **think for me about <thing>** lever — it fires when you have a hard call to make and 30 minutes is too long to spend gathering context.
+
+## A note on WebFetch
+
+`WebFetch` is in `allowed-tools` so the memo can reach external context
+(a customer's website, a competitor announcement) when internal sources
+don't cover it. Two things to know:
+
+- **Identity.** WebFetch requests run from your machine and are logged
+  like any other browser traffic. Don't use this recipe on topics
+  whose lookup you wouldn't want logged.
+- **Availability.** Some sites refuse non-browser fetches; some
+  rate-limit aggressively. The memo degrades gracefully — when a
+  source is unreachable, **Where we are** notes the gap rather than
+  retrying. Don't loop on retries.

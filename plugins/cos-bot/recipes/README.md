@@ -3,19 +3,26 @@
 The canonical bodies for every Chief of Staff slash command. The
 `chief-of-staff` sub-agent inherits them all.
 
-**How to install.** Run `/cos-bot:install-recipes` for a guided install
-of the five expansion-pack recipes (`/prep`, `/inbox-triage`,
-`/awaiting`, `/who`, `/catchup`) — it asks a small profile pass once,
-applies your choices to the canonical bodies, writes them to
-`chiefofstaff/.claude/commands/`, persists durable answers as typed
-memory, and offers to schedule the routines. Pass `all` for stock
-defaults (`/cos-bot:install-recipes all`) or a single slug for one
-recipe (`/cos-bot:install-recipes prep`). For the four spine recipes
-(`/brief`, `/shutdown`, `/weekly-review`, `/tackle`) and anything not
-covered by the installer, paste each body manually into
-`chiefofstaff/.claude/commands/<name>.md`.
+## How to install
 
-Voice/format rules (apply to every recipe):
+Run `/cos-bot:install-recipes` for a guided install of the five
+expansion-pack recipes (`/prep`, `/inbox-triage`, `/awaiting`, `/who`,
+`/catchup`) — it asks a small profile pass once, applies your choices
+to the canonical bodies, writes them to `<your-project>/.claude/commands/`,
+persists durable answers as typed memory, and offers to schedule the
+routines. Pass `all` for stock defaults (`/cos-bot:install-recipes
+all`) or a single slug for one recipe (`/cos-bot:install-recipes
+prep`).
+
+For the four spine recipes (`/brief`, `/shutdown`, `/weekly-review`,
+`/tackle`) and anything not covered by the installer, paste each body
+manually into `<your-project>/.claude/commands/<name>.md`.
+
+## Voice/format rules
+
+These apply to **recipe output** (the text the bot DMs you). They do
+*not* govern terminal output from the install-recipes skill, which uses
+ASCII checkmarks for write summaries.
 
 - Plain text suitable for Telegram DM. No emoji. No preamble.
 - Hard rule: never auto-send, never auto-decide.

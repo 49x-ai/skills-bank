@@ -5,7 +5,7 @@
 
 ## Slash-command body
 
-Paste into `chiefofstaff/.claude/commands/who.md`:
+Paste into `.claude/commands/who.md` (or run `/cos-bot:install-recipes who`):
 
 ```markdown
 ---
@@ -66,3 +66,17 @@ between walking in cold and walking in informed is one well-cited
 - **Bigger dossier?** Add a "their open commitments to me" section drawn
   from `/awaiting`.
 - **Editorial off?** Drop the "What I might be missing" line.
+
+## A note on WebFetch
+
+This recipe pulls LinkedIn snippets via `WebFetch` when an external
+attendee isn't already in your inbox. Two things to know:
+
+- **Identity.** WebFetch hits public pages from your machine — the
+  request is logged like any other web traffic. Don't use this recipe
+  on anyone whose lookup you wouldn't want logged.
+- **Availability.** LinkedIn often serves a login-walled page to
+  unauthenticated fetches. When that happens, the dossier degrades
+  gracefully — the **Identity** section just notes "LinkedIn page not
+  reachable" and falls back to email-signature data. Don't retry
+  aggressively; the page won't unlock.

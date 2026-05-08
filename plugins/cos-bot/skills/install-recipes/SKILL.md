@@ -1,6 +1,6 @@
 ---
 name: install-recipes
-description: Guided installer for the five Chief of Staff expansion-pack recipes (/prep, /inbox-triage, /awaiting, /who, /catchup). Reads canonical recipe bodies bundled with the plugin, walks the user through a small profile pass and per-recipe deltas, writes personalized slash-command files into .claude/commands/, persists durable answers as typed memory, and offers to schedule the routines. Use when the user asks to "install recipes," "add /prep to my bot," "customize my recipes," "set up my chief of staff recipes," or starts the expansion-pack gate.
+description: Guided installer for the five Chief of Staff recipes (/prep, /inbox-triage, /awaiting, /who, /catchup). Walks a small profile pass + per-recipe deltas, writes personalized slash-command files into .claude/commands/, persists durable answers as typed memory, and offers to schedule the routines. Use when the user asks to "install recipes," "add /prep to my bot," "customize my recipes," or "set up my chief of staff recipes."
 user-invocable: true
 allowed-tools:
   - Read
@@ -384,15 +384,23 @@ For each recipe in `state.selected` whose `state.deltas[<slug>].schedule`
 is **not** `On-demand only`, collect the routine metadata. Map options
 to the literal `/schedule` arguments these recipes' files document:
 
-| Slug | Schedule choice | Cron / form |
-|---|---|---|
-| `prep` | Q-dispatcher | `30 7 * * 1-5` (a once-daily dispatcher routine that schedules per-meeting one-shots) |
-| `prep` | D-loop | a `/loop` watcher every 15 min — surface as `/loop 15m /prep` |
-| `inbox-triage` | 11+3 | `0 11,15 * * 1-5` |
-| `inbox-triage` | 3 only | `0 15 * * 1-5` |
-| `awaiting` | Tue+Thu | `0 10 * * 2,4` |
+| Slug | Routine name (pin) | Schedule choice | Cron / form |
+|---|---|---|---|
+| `prep` | `prep` | Q-dispatcher | `30 7 * * 1-5` (a once-daily dispatcher routine that schedules per-meeting one-shots) |
+| `prep` | `prep` | D-loop | a `/loop` watcher every 15 min — surface as `/loop 15m /prep` |
+| `inbox-triage` | `inbox-triage` | 11+3 | `0 11,15 * * 1-5` |
+| `inbox-triage` | `inbox-triage` | 3 only | `0 15 * * 1-5` |
+| `awaiting` | `awaiting` | Tue+Thu | `0 10 * * 2,4` |
 
 `/who` and `/catchup` are always on-demand (no schedule offer).
+
+**Routine name = slug.** The canonical recipe files use longer
+metadata names (`meeting-prep`, `morning-brief`, etc.) but the
+slash command, the `state.selected` slug, and the `/schedule` routine
+name are all the **slug** form (`prep`, `brief`, `inbox-triage`, …).
+Always pass the slug as `<routine-name>` in the `/schedule` create
+command — it matches the slash command name the user types and the
+filename in `.claude/commands/`.
 
 If the list is empty, skip this step and jump to `done`.
 
@@ -493,10 +501,18 @@ For drafts, follow the tone in `feedback_tone.md`.
 
 **Stack swap.** If `profile.stack === "Notion"`, replace the literal
 substring `Linear issue` with `Notion page` and `Linear issues` with
-`Notion pages`. If `profile.stack === "Neither"`, drop any line whose
-trimmed content starts with `Linear issues mentioning them` or `Issues.`
-(the latter is `/catchup`'s step 3 heading — drop the entire numbered
-list item including its bullet sub-items down to the next number).
+`Notion pages`. If `profile.stack === "Neither"`, drop the
+issues-lookup section in each affected recipe by *contains*-match
+(not starts-with) on these anchors:
+
+- `prep` step 2: drop the sub-bullet whose text contains `open Linear
+  issue mentioning them`.
+- `who` step 5: drop the sentence/line whose text contains `Linear
+  issues mentioning them`.
+- `catchup` step 3 (the numbered `**Issues.**` heading + its body):
+  drop the entire numbered item (heading + paragraph) up to the next
+  numbered heading.
+
 `Both` is a no-op (canonical body already mentions Linear; Notion is
 additive in the user's own setup).
 
@@ -548,9 +564,13 @@ section:
   a "decisions made without me" section yet; the Customizing note is
   aspirational. Treat `true` as the no-op default and `false` as also a
   no-op for now). Reserved for future extension.
-- `skipAggressiveness: "loose"` → in the `**Skip**` definition line,
-  replace `automated, marketing, internal CC noise, already resolved`
-  with `automated only`.
+- `skipAggressiveness: "loose"` → in `catchup`'s `**Skip**` definition
+  (the line near the end that reads `For **Skip**: count + 1-line
+  reason ("automated", "internal noise", "resolved while I was out").`),
+  replace the parenthetical `("automated", "internal noise",
+  "resolved while I was out")` with `("automated only")`. Match by
+  *contains* on the literal `"automated", "internal noise"` to anchor
+  the line (the full parenthetical is unique in the body).
 
 ### After all transforms
 
@@ -559,8 +579,10 @@ Validate the result:
 - The opening `---\ndescription: …\nallowed-tools: …\n---` frontmatter
   is intact.
 - The first `# /<slug>` heading is intact.
-- The "Hard rule" line is intact (every recipe has one — never strip
-  it).
+- The "Hard rule" line is intact. Match `^Hard rule[s]?:` (singular
+  or plural — `inbox-triage.md` uses `Hard rules:` with a list,
+  others use `Hard rule:` followed by a sentence). Require at least
+  one match per recipe; never strip a Hard-rule line.
 - No emoji introduced. No preamble inserted before the frontmatter.
 
 If any check fails, abort the write for that slug, log the failed
@@ -580,8 +602,11 @@ the index file itself).
 ### File shapes
 
 **`reference_vips.md`** — `type: reference`. Body: the user's
-comma-separated VIP list, one entry per line, plus a one-line note about
-how it's used.
+comma-separated VIP list, one entry per line. Reference memories
+should be terse pointers per the global memory schema, so the body is
+just the list. The "Used by …" footer below is **optional context** —
+include it on first write to orient the user; skip it on re-writes
+where the file already exists with a similar footer.
 
 ```
 ---
@@ -595,7 +620,11 @@ VIPs:
 - Jane Doe (Acme)
 - board@…
 - *@bigcustomer.com
+```
 
+Optional footer (first write only):
+
+```
 Used by `/inbox-triage` (VIP-only mode), `/awaiting` (filter), and
 `/who` (relationship lookup). Update freely — recipes re-read this on
 every run.
@@ -741,26 +770,15 @@ index entry is still correct.
   `.claude/commands/`. If a canonical body needs fixing, fork the
   plugin (`49x-ai/skills-bank`) and submit a PR; local edits will be
   blown away by the next plugin update.
-- **Transform spec literals don't always match canonical recipe text
-  exactly.** Two specific transforms documented above use
-  "starts-with" / "literal-replace" semantics that don't actually
-  match any line in the current canonical bodies:
-  - `stack === "Neither"`: spec says drop lines whose trimmed content
-    starts with `Linear issues mentioning them` or `Issues.`. No line
-    starts with those literals — they appear mid-line (e.g. `prep` step
-    2 sub-bullet, `who` step 5, `catchup` step 3 heading). Apply the
-    transform by intent: drop the sub-bullet/step that mentions
-    Linear/issues for that recipe.
-  - `skipAggressiveness === "loose"` (catchup): spec says replace
-    `automated, marketing, internal CC noise, already resolved`. That
-    literal lives in `inbox-triage.md`, not `catchup.md` — `catchup`'s
-    Skip definition reads `("automated", "internal noise", "resolved
-    while I was out")`. Apply by intent: rewrite catchup's Skip
-    definition to `("automated only")`.
-
-  When updating canonical bodies (Phase 8 work), tighten these
-  transforms to match actual line content, or rewrite as
-  `contains`-semantics with explicit anchor strings.
+- **Transforms use `contains`-semantics, not `starts-with`.** The
+  `stack === "Neither"` and `skipAggressiveness === "loose"`
+  transforms in *Deterministic transforms* anchor on substrings that
+  appear mid-line in the canonical bodies (e.g. `Linear issues
+  mentioning them`, `"automated", "internal noise"`). Match by
+  *contains* on the documented anchor strings, then drop the
+  containing line/sub-bullet/numbered item per the transform's
+  intent. Don't switch to literal whole-line equality — the canonical
+  bodies aren't formatted for it.
 - **Restart any backgrounded `--channels` session after install.**
   A `claude --channels …` session running in tmux/script(1) loads the
   project's `.claude/commands/` directory at boot — so any recipe

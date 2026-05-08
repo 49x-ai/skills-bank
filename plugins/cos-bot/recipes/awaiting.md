@@ -13,7 +13,7 @@
 
 ## Slash-command body
 
-Paste into `chiefofstaff/.claude/commands/awaiting.md`:
+Paste into `.claude/commands/awaiting.md` (or run `/cos-bot:install-recipes awaiting`):
 
 ```markdown
 ---

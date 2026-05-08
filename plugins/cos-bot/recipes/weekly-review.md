@@ -1,6 +1,8 @@
 # Recipe — Weekly review (Friday 4pm)
 
-> Canonical body for the Friday weekly review and the Stage 5 D routine. The D variant pairs this with a live `/loop` demo for the closing — see `stage-5-schedule.md`.
+> Canonical body for the `/weekly-review` slash command. Friday
+> reflection routine. Pairs naturally with a live `/loop` demo (see
+> *Pairing with `/loop`* below).
 
 ## Routine metadata (for `/schedule`)
 
@@ -11,7 +13,7 @@
 
 ## Slash-command body
 
-Paste into `chiefofstaff/.claude/commands/weekly-review.md`:
+Paste into `.claude/commands/weekly-review.md`:
 
 ```markdown
 ---
@@ -49,12 +51,14 @@ Hard rule: do not draft replies, do not draft thank-yous, do not auto-send anyth
 
 Friday at 4pm. You're winding down. The phone buzzes. You read the review on the way out — and now you have a question to sit with over the weekend.
 
-## D-variant — paired with a live `/loop` demo
+## Pairing with `/loop`
 
-In Stage 5 D, you also fire `/loop 2m /brief` from your terminal during the closing window. The `/loop` is the **see-it-fire-now** demo; the weekly review is the **lands-on-Friday** routine. Together they show:
+Optionally fire `/loop 2m /brief` from your terminal alongside the
+scheduled review. The `/loop` is the **see-it-fire-now** rhythm; the
+weekly review is the **lands-on-Friday** rhythm. Together they cover:
 
-- Scheduled = unprompted, future cadence (workshop's payoff).
-- Loop = ad-hoc, immediate cadence (workshop's climax — phone-buzz in the room).
+- Scheduled = unprompted, future cadence.
+- Loop = ad-hoc, immediate cadence.
 
 ## Customizing
 

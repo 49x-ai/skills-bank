@@ -1,9 +1,15 @@
 {
   "name": "cos-bot",
-  "description": "Wire a Telegram bot to Claude Code in two ways: /cos-bot:setup creates a new bot from scratch (drives BotFather end-to-end), /cos-bot:connect is the fast path for users who already have a token. Both hand off to /telegram:configure, background the channel server, and walk pairing. Also installs five Chief-of-Staff recipe commands.",
+  "description": "Wires a Telegram bot to Claude Code and installs Chief-of-Staff recipes. /cos-bot:setup creates a new bot from scratch, /cos-bot:connect is the fast path for an existing token, /cos-bot:install-recipes drops personalized command files into your project.",
   "version": "0.1.0",
   "author": {
-    "name": "49x.ai"
+    "name": "49x.ai",
+    "url": "https://49x.ai"
+  },
+  "homepage": "https://github.com/49x-ai/skills-bank/tree/main/plugins/cos-bot",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/49x-ai/skills-bank.git"
   },
   "keywords": [
     "telegram",

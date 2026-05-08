@@ -67,8 +67,8 @@ Parse `$ARGUMENTS` (space-separated). Recognize:
 ## Shared state file
 
 Path: `~/.claude/channels/telegram/.cos-bot-setup.json`. Schema is the
-same as `/cos-bot:setup`'s (see setup/SKILL.md:70-98 for the full
-shape). The fields this skill touches:
+same as `/cos-bot:setup`'s (see `setup/SKILL.md` § *State file* for the
+full shape). The fields this skill touches:
 
 - `mode` — set to `"bring-your-own-token"` for diagnosability. Tells
   resumes that intake/create/metadata are intentionally skipped.
@@ -92,7 +92,8 @@ Then stop. Don't auto-redirect — let the user decide.
 
 ## Step 1 — prerequisite: the `telegram` plugin
 
-Same check as setup Step 0 (setup/SKILL.md:112-146). Read
+Same check as setup Step 0 (see `setup/SKILL.md` § *Step 0 —
+prerequisites* → *Required: the `telegram` plugin*). Read
 `~/.claude/settings.json` and verify
 `enabledPlugins["telegram@claude-plugins-official"] === true`. If
 missing or not enabled, surface the same install offer:
@@ -164,7 +165,9 @@ re-ask.
 
 **Hold the token in conversation memory only.** Do not write it to
 state, logs, or any file other than what `/telegram:configure`
-writes. Mirrors setup/SKILL.md:394-395, 596-598.
+writes. Mirrors `setup/SKILL.md` § *Step 2 — `create`* → *After capture*
+and § *Step 4 — `configure`* → *Drop the token from conversation
+memory*.
 
 Set `state.mode = "bring-your-own-token"`, `state.step = "configure"`,
 persist (without the token). Proceed to step 4.
@@ -173,7 +176,8 @@ persist (without the token). Proceed to step 4.
 
 ## Step 4 — configure
 
-**Same three-strategy dispatch as setup Step 4** (setup/SKILL.md:507-589):
+**Same three-strategy dispatch as setup Step 4** (see `setup/SKILL.md`
+§ *Step 4 — `configure`*):
 
 1. **Headless nested invocation** (preferred) — spawn `claude -p` with
    `bypassPermissions` and pipe `/telegram:configure <token>` via
@@ -235,9 +239,10 @@ step 5.
 
 ## Step 5 — relaunch
 
-**Same backgrounding logic as setup Step 5** (setup/SKILL.md:606-751).
-The channel server only connects to Telegram when Claude Code is
-launched with `--channels`. Two paths:
+**Same backgrounding logic as setup Step 5** (see `setup/SKILL.md` §
+*Step 5 — `relaunch`* and the full `setup/BACKGROUNDING.md`
+companion). The channel server only connects to Telegram when Claude
+Code is launched with `--channels`. Two paths:
 
 1. **Foreground relaunch.** Print verbatim: *"Run `/exit`, then
    `claude --channels plugin:telegram@claude-plugins-official` from
@@ -247,9 +252,10 @@ launched with `--channels`. Two paths:
 2. **Backgrounded session** (in-session pairing AND day-to-day use).
    Detect `tmux` via `command -v tmux`. If available, offer the
    tmux + `--dangerously-skip-permissions` path (recommended); if
-   not, offer the `nohup script(1)` fallback. Exact commands and
-   verification are documented in setup/SKILL.md:644-741 — reuse
-   that machinery verbatim.
+   not, offer the `nohup script(1)` fallback. Exact commands,
+   verification, and authorization dialogue are documented in
+   `setup/BACKGROUNDING.md` § *Step A — detect tmux* through § *Step
+   D — finalize* — reuse that machinery verbatim.
 
 **Three silent failure modes** apply to backgrounded sessions
 regardless of which path you take. Surface them up front so the user
@@ -264,8 +270,8 @@ can spot them later:
    inherited grants.
 
 Recovery for all three: kill the wedged session, respawn (preferably
-in tmux). See setup/SKILL.md:1057-1098 for the full diagnosis +
-recovery notes.
+in tmux). See `setup/BACKGROUNDING.md` § *Three silent failure modes*
+for the full diagnosis + recovery notes.
 
 When the channel is up (whether foreground or background), set
 `state.relaunchAcknowledged = true`, persist, and proceed to step 6.
@@ -274,10 +280,10 @@ When the channel is up (whether foreground or background), set
 
 ## Step 6 — pair
 
-**Same flow as setup Step 6** (setup/SKILL.md:753-902). The user DMs
-the bot, the channel server writes a `pending` entry to
-`access.json`, and we run `/telegram:access pair <code>` to promote
-the senderId from `pending` into `allowFrom`.
+**Same flow as setup Step 6** (see `setup/SKILL.md` § *Step 6 —
+`pair`*). The user DMs the bot, the channel server writes a `pending`
+entry to `access.json`, and we run `/telegram:access pair <code>` to
+promote the senderId from `pending` into `allowFrom`.
 
 The same three dispatch options apply (preferred → fallback → direct
 edit) and the same gotchas:
@@ -285,14 +291,16 @@ edit) and the same gotchas:
 - Telegram-ID-shaped paths and argv values are sensitive — the
   harness's permission policy treats them as agent-inferred grants.
   Use `Write` (not `Bash`) for the `access.json` mutation and the
-  `approved/<senderId>` marker. See setup/SKILL.md:1099-1111.
+  `approved/<senderId>` marker. See `setup/IMPLEMENTATION-NOTES.md`
+  § *Tool boundary and permissions* (the Telegram-ID-shaped paths
+  bullet).
 - The pairing code expires (default 1 hour). If the user took a
   long break between DMing the bot and pairing, ask them to DM
   again to mint a fresh code.
 - The `approved/<senderId>` marker is consumed asynchronously —
   it disappears within seconds of the channel server picking it
   up. **That's the success signal, not an error.** See
-  setup/SKILL.md:1048-1056.
+  `setup/IMPLEMENTATION-NOTES.md` § *Pairing async behavior*.
 
 Procedure (mirroring setup):
 
@@ -371,5 +379,8 @@ Then nudge the natural follow-up:
   here — it would re-introduce the bulk we just stripped out.
 - **Slash commands aren't tool calls.** Same caveat as setup —
   `/telegram:configure` and `/telegram:access pair` are dispatched by
-  the harness, not callable as tools. The nested `claude -p` workaround
-  is the canonical solution; see setup/SKILL.md:1004-1015.
+  the harness, not callable as tools. The nested `claude -p`
+  workaround is the canonical solution; see
+  `setup/IMPLEMENTATION-NOTES.md` § *Tool boundary and permissions*
+  (the *Slash commands aren't tool calls* and *`bypassPermissions` on
+  nested calls is gated* bullets).

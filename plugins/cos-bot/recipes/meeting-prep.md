@@ -5,7 +5,8 @@
 
 ## Routine metadata (for `/schedule`)
 
-- **Name:** `meeting-prep`
+- **Name:** `prep` (matches the slash command — `/cos-bot:install-recipes`
+  uses the slug as the routine name)
 - **Trigger:** dynamic — agent reads today's calendar at 7:30am and schedules
   one-shot `/prep` calls 30 min before each meeting. (See "Scheduling" below.)
 - **Agent to invoke:** `chief-of-staff`
@@ -13,7 +14,7 @@
 
 ## Slash-command body
 
-Paste into `chiefofstaff/.claude/commands/prep.md`:
+Paste into `.claude/commands/prep.md` (or run `/cos-bot:install-recipes prep`):
 
 ```markdown
 ---
