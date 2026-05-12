@@ -1,0 +1,33 @@
+{
+  "_comment": "Drives /cos-bot:connect through the bring-your-own-token path. The TEST_BOT_TOKEN gets substituted in at runtime by connect-pair.sh.",
+  "initial_prompt": "/cos-bot:connect",
+  "answers": [
+    {
+      "_intent": "If asked which path (already-have-token), pick that.",
+      "match": "already have a token",
+      "send": "1\r"
+    },
+    {
+      "_intent": "Paste the bot token. Replaced at runtime via jq.",
+      "match": "Paste your token",
+      "send": "REPLACE_AT_RUNTIME\r"
+    },
+    {
+      "_intent": "Authorize tmux + skip-permissions launch.",
+      "match": "Authorize",
+      "send": "1\r"
+    },
+    {
+      "_intent": "Confirm relaunch.",
+      "match": "relaunch",
+      "send": "1\r"
+    },
+    {
+      "_intent": "Connect prints next steps; exit cleanly.",
+      "match": "Listening",
+      "send": "/exit\r"
+    }
+  ],
+  "timeout_per_match": 90,
+  "overall_timeout": 600
+}

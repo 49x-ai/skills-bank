@@ -1,0 +1,10 @@
+# Secrets — never commit
+.env
+.envtoken
+*.local
+.DS_Store
+
+# Harness scratch state
+test-harness/sandboxes/
+test-harness/reports/
+test-harness/.env

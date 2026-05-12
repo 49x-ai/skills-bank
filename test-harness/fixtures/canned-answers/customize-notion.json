@@ -1,0 +1,58 @@
+{
+  "_comment": "Drives /cos-bot:install-recipes through the customize path. Answers are tuned to install ALL FIVE recipes with non-default settings so we exercise transforms + memory writes.",
+  "initial_prompt": "/cos-bot:install-recipes",
+  "answers": [
+    {
+      "_intent": "intake — pick the 'customize' branch",
+      "match": "Quickest path is",
+      "send": "2\r"
+    },
+    {
+      "_intent": "Q1 — first 3 recipes (multi-select). Send all three: 1+2+3 then enter.",
+      "match": "Which of these recipes do you want",
+      "send": "1\t2\t3\r"
+    },
+    {
+      "_intent": "Q2 — last 2 recipes (multi-select).",
+      "match": "And these",
+      "send": "1\t2\r"
+    },
+    {
+      "_intent": "profile — VIPs (free-text via Other)",
+      "match": "VIP",
+      "send": "joseroca@gmail.com\r"
+    },
+    {
+      "_intent": "profile — persona preset (warm)",
+      "match": "persona",
+      "send": "2\r"
+    },
+    {
+      "_intent": "profile — stack (Notion)",
+      "match": "Issue tracker",
+      "send": "2\r"
+    },
+    {
+      "_intent": "profile — comm mix (mostly external)",
+      "match": "communication is",
+      "send": "1\r"
+    },
+    {
+      "_intent": "preview — Yes write everything",
+      "match": "Proceed",
+      "send": "1\r"
+    },
+    {
+      "_intent": "schedule — skip authorization (don't fire nested claude -p)",
+      "match": "authorize",
+      "send": "2\r"
+    },
+    {
+      "_intent": "summary appears, exit cleanly",
+      "match": "Recipe install complete",
+      "send": "/exit\r"
+    }
+  ],
+  "timeout_per_match": 90,
+  "overall_timeout": 600
+}
