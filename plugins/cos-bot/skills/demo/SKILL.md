@@ -2,6 +2,7 @@
 name: demo
 description: Fire one installed Chief of Staff recipe right now and DM the result to your Telegram. Picks the most demo-friendly recipe automatically (catchup → awaiting → inbox-triage → prep). Converts "I configured a thing" into "the thing just worked." Use when the user finishes /cos-bot:install-recipes and wants to see the bot reply end-to-end, or asks to "test my bot," "see it work," or "fire a recipe through Telegram."
 user-invocable: true
+model: haiku
 allowed-tools:
   - Read
   - AskUserQuestion

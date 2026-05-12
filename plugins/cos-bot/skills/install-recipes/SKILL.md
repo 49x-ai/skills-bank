@@ -2,6 +2,7 @@
 name: install-recipes
 description: Guided installer for the five Chief of Staff recipes (/prep, /inbox-triage, /awaiting, /who, /catchup). Defaults-first — leads with "all five with sensible defaults, customize later" so most users finish in ~4 questions. Also owns persona writes via `/cos-bot:install-recipes persona [preset|tune|show|reset]`. Use when the user asks to "install recipes," "add /prep to my bot," "customize my recipes," "set up my chief of staff recipes," "change the bot's tone," or "tune my CoS persona."
 user-invocable: true
+model: haiku
 allowed-tools:
   - Read
   - Write
@@ -17,6 +18,9 @@ allowed-tools:
   - Bash(date *)
   - Bash(claude --permission-mode bypassPermissions -p)
   - Bash(printf *)
+  - Bash(awk *)
+  - Bash(tmux *)
+  - Bash(pgrep *)
 ---
 
 # /cos-bot:install-recipes — Guided recipe installer + persona tuner
@@ -83,9 +87,10 @@ Parse `$ARGUMENTS` (space-separated). Recognize:
 - *(empty)* — interactive mode. Read state; resume at `state.step` (or
   start at `intake` if no state file).
 - `all` / `defaults` — install all five recipes with stock bodies. **No
-  Q&A**: skip the profile pass and per-recipe deltas, write all five
-  destinations from the canonical bodies as-is, summarize, stop. Useful
-  for "just give me the defaults" and CI smoke tests.
+  Q&A**: skip everything else and run the *fast install* path (see
+  *Step F* below). One Bash call writes all five files; no state file,
+  no bot-restart probes, no per-slug Read/Write turns. Useful for
+  "just give me the defaults," CI smoke tests, and harness perf runs.
 - `<name>` — one of `prep`, `inbox-triage`, `awaiting`, `who`, `catchup`.
   Run interactive mode but pre-select only that recipe. Profile pass
   still runs (those answers are reusable). Per-recipe deltas only ask
@@ -144,6 +149,100 @@ persona / stack / mix), `deltas` (per-recipe knobs keyed by slug),
    `projectDir` with `/` replaced by `-` (leading dash included).
    `mkdir -p` it lazily — only when memory is about to be written.
 
+### 0a — tool-denial early abort (every run, including Step F)
+
+If **any** Bash, Write, or Edit call returns a permission denial during
+this skill, **abort immediately** with this exact message and stop:
+
+```
+Cannot install recipes — the harness denied a tool call.
+
+Re-run with:
+  claude --permission-mode bypassPermissions  (one-shot, sandbox use)
+or accept the prompts when they appear (interactive Claude Code).
+
+Files attempted: <list>
+Files actually written: <list> (or "none")
+
+Re-running with permissions granted is safe — the skill is idempotent.
+```
+
+Do **not** print "Recipe install complete" with any subset of writes
+denied. A partial install is a corrupt install — the user should see
+exactly what landed and what didn't, and a clear path to re-run. This
+applies to **every** code path in this skill, not just Step F.
+
+Background: a previous version of this skill printed the success
+summary even when all 9 file writes had been denied, leaving the
+user thinking the install worked. Detecting denial up-front and
+hard-aborting prevents that failure mode.
+
+---
+
+## Step F — fast install (`defaults` / `all` arg only)
+
+When `$ARGUMENTS` is `all` or `defaults`, run this branch and **stop**.
+Skip Steps 0–7. No state file. No `AskUserQuestion`. No bot-restart
+probes. No per-slug Read+Write loop.
+
+The contract: empty profile + empty deltas produce the canonical body
+verbatim, so a single shell loop that awk-extracts the fenced markdown
+block from each source and redirects it to the destination produces
+byte-equal output to the orchestrated path. The shell is the right
+primitive here — five model-mediated `Write` calls regenerate the body
+in tool input on every turn (~2k output tokens) for zero added value.
+
+Run **one** Bash call:
+
+```bash
+PROJECT_DIR="$(pwd)"
+DEST="$PROJECT_DIR/.claude/commands"
+SRC="${CLAUDE_PLUGIN_ROOT}/recipes"
+mkdir -p "$DEST"
+for pair in "prep:meeting-prep" "inbox-triage:inbox-triage" "awaiting:awaiting" "who:who" "catchup:catchup"; do
+  slug="${pair%%:*}"
+  src="${pair#*:}"
+  awk '/^## Slash-command body/{f=1;next} f && /^```markdown/{b=1;next} b && /^```/{exit} b' \
+    "$SRC/$src.md" > "$DEST/$slug.md"
+done
+ls "$DEST"
+```
+
+Then print the summary directly (no Step 7a probes — see *Implementation
+notes* on why):
+
+```
+Recipe install complete (defaults).
+
+Installed:
+  /prep            (.claude/commands/prep.md)
+  /inbox-triage    (.claude/commands/inbox-triage.md)
+  /awaiting        (.claude/commands/awaiting.md)
+  /who             (.claude/commands/who.md)
+  /catchup         (.claude/commands/catchup.md)
+
+Try one now from this directory:
+  /prep
+  /inbox-triage
+  /who jane@acme.com
+
+Or fire one through your bot:
+  /cos-bot:demo
+
+Re-run /cos-bot:install-recipes (no args) any time to customize — the
+defaults you just installed are a fine starting point.
+```
+
+If the Bash exits non-zero, abort with the captured stderr and a
+pointer to reinstall the plugin (a missing `recipes/*.md` source is
+the only realistic failure here).
+
+If the user wants the `Step 7a` bot-restart behavior, they can re-run
+the skill with no args (the customize path runs the probes) — but the
+fresh-project case this fast path targets almost never has a
+backgrounded `claude --channels …` session running yet, so the probes
+are wasted work.
+
 ---
 
 ## Step 1 — `intake` (defaults-first, then recipe picker if customizing)
@@ -189,9 +288,9 @@ Map answers to slugs (`prep`, `inbox-triage`, `awaiting`, `who`,
 
 If the skill was invoked with `<name>` argument, **skip this step
 entirely** — `state.customize = true`, `state.selected = [<name>]`,
-proceed to `profile`. If invoked with `all` / `defaults`, also skip
-this step — set `customize = false`, `selected` to all five, jump to
-`write`.
+proceed to `profile`. If invoked with `all` / `defaults`, **do not**
+fall through to this step or to `write` — jump to *Step F — fast
+install* and stop after it.
 
 ---
 

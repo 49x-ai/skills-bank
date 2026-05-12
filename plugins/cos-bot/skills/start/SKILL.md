@@ -2,6 +2,7 @@
 name: start
 description: One-command entry point for "I want a Chief of Staff bot." Inspects current state (token configured? paired? recipes installed?) and chains the right next step (setup OR connect → install-recipes with defaults → demo). Run when the user says "set up cos-bot," "I want the chief of staff thing," "start cos-bot," or doesn't yet know which sub-skill to run.
 user-invocable: true
+model: haiku
 allowed-tools:
   - Read
   - AskUserQuestion

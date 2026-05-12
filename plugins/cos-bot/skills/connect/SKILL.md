@@ -2,6 +2,7 @@
 name: connect
 description: Fast path for users who already have a Telegram bot token from BotFather — ensures the telegram plugin is installed, hands the token to /telegram:configure, backgrounds the channel server, and walks pairing. Skips BotFather drive and metadata. Use when the user says "I already have a token", "connect my existing bot", or pastes a token without a setup flow in progress.
 user-invocable: true
+model: haiku
 allowed-tools:
   - Read
   - Write
