@@ -1,0 +1,19 @@
+{
+  "name": "gws-proxy",
+  "description": "Adds gws-<alias> CLI profiles that authenticate against the shared 49x gws CLI proxy OAuth client. Users get gmail/calendar/drive access through gws without setting up their own GCP project, OAuth consent screen, or OAuth client. The headline path is /gws-proxy:add-account <alias> <email> which installs the gws CLI if missing, drops the bundled client_secret.json into ~/.config/gws-<alias>/, runs OAuth consent, and creates the gws-<alias> wrapper plus /<alias> slash command.",
+  "version": "0.1.0",
+  "author": {
+    "name": "49x.ai",
+    "url": "https://49x.ai"
+  },
+  "homepage": "https://github.com/49x-ai/skills-bank/tree/main/plugins/gws-proxy",
+  "repository": "https://github.com/49x-ai/skills-bank.git",
+  "keywords": [
+    "gws",
+    "google-workspace",
+    "gmail",
+    "calendar",
+    "drive",
+    "oauth"
+  ]
+}

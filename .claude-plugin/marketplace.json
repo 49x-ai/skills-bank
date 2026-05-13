@@ -15,6 +15,16 @@
       "category": "channels",
       "tags": ["telegram", "botfather", "chief-of-staff"],
       "keywords": ["telegram", "botfather", "chief-of-staff"]
+    },
+    {
+      "name": "gws-proxy",
+      "description": "Shared Google Workspace CLI access. /gws-proxy:add-account <alias> <email> creates gws-<alias> profiles backed by a single shared OAuth client so users get gmail/calendar/drive in seconds without touching GCP.",
+      "version": "0.1.0",
+      "author": { "name": "49x.ai" },
+      "source": "./plugins/gws-proxy",
+      "category": "google-workspace",
+      "tags": ["gws", "google-workspace", "gmail", "calendar", "drive"],
+      "keywords": ["gws", "google-workspace", "gmail", "calendar", "drive", "oauth"]
     }
   ]
 }
