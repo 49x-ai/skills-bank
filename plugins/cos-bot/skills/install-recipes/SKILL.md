@@ -445,9 +445,13 @@ Print a one-line confirmation per recipe:
 If `state.customize === false`, skip this step (defaults path is
 on-demand only). Persist `state.step = "done"` and proceed.
 
-Otherwise, see `references/schedule.md` for the cron table, the
-authorization prompt pattern, and the dispatch commands. The
-orchestration shape:
+Otherwise, see `references/schedule.md` for the cadence table, the
+authorization prompt pattern, and the dispatch commands. **Default
+mechanism for cos-bot recipes is `/cos-bot:autopilot`** — local,
+self-rescheduling, survives terminal exit, can post to the user's
+Telegram bot. `/schedule` (cloud routines) is only suggested if the
+user explicitly asks for it; cos-bot recipes need the local Telegram
+channel and can't run as remote agents. The orchestration shape:
 
 1. Build the eligible list from `state.selected` filtered by
    `state.deltas[<slug>].schedule !== "On-demand only"`.

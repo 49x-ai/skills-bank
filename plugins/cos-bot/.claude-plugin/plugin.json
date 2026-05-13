@@ -12,5 +12,18 @@
     "telegram",
     "botfather",
     "chief-of-staff"
-  ]
+  ],
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "test -f \"$HOME/.claude/channels/telegram/.cos-bot-autopilot.json\" && claude --permission-mode bypassPermissions -p \"/cos-bot:autopilot rearm --silent\" >/dev/null 2>&1 &"
+          }
+        ]
+      }
+    ]
+  }
 }

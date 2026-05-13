@@ -111,6 +111,7 @@ user-invocable for re-runs and edge cases.
 | `/cos-bot:connect` | You have a BotFather token already (fast path) |
 | `/cos-bot:install-recipes` | Drop the recipe slash-commands into your project |
 | `/cos-bot:demo` | Fire one recipe right now and DM the result |
+| `/cos-bot:autopilot` | Put a recipe on a local self-rescheduling loop (`daily 9am`, `every 2h`, adaptive, etc.) — survives terminal exit |
 
 All resumable. All idempotent. State lives in
 `~/.claude/channels/telegram/`.
@@ -136,6 +137,29 @@ session.
 **Need to start over.** `/cos-bot:setup reset` clears state. The bot
 itself stays on Telegram — `@BotFather` and `/deletebot` removes it
 for real.
+
+## Recurring tasks (local, not cloud)
+
+cos-bot recipes are inherently local — they post through your local
+Telegram bot and shell out to `claude -p` on your machine. That rules
+out `/schedule` (its routines run as remote agents on Anthropic infra
+with no access to your local bot directory).
+
+Use `/cos-bot:autopilot` instead. It scaffolds a self-rescheduling
+slash command that runs locally, posts results to your Telegram, and
+survives terminal exit:
+
+```
+/cos-bot:autopilot /prep daily 9am
+/cos-bot:autopilot /inbox-triage at 11:00,15:00 weekdays stop_by 2026-12-31
+/cos-bot:autopilot /awaiting adaptive max_runs 50
+/cos-bot:autopilot list
+/cos-bot:autopilot stop prep-autopilot
+```
+
+A supervisor auto-installs on first arm and health-checks every 30
+minutes. After a reboot, a `SessionStart` hook re-arms everything when
+you next open Claude Code.
 
 ## Under the hood
 

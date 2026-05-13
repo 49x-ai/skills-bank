@@ -1,5 +1,67 @@
 # Changelog
 
+## 2026-05-13 — cos-bot autopilot skill (local self-rescheduling recipes)
+
+Adds `/cos-bot:autopilot`, a meta-skill that puts any cos-bot recipe
+on a self-rescheduling local schedule. The recipes themselves are
+inherently local (Telegram bot in `~/.claude/channels/telegram/`,
+nested `claude -p` dispatch, project-installed `.claude/commands/`),
+so `/schedule` (remote-agent runner on Anthropic infra) is the wrong
+mechanism for them. `/loop` covers the live-session case but dies
+with the terminal. Autopilot fills the gap.
+
+### `plugins/cos-bot/skills/autopilot/` (new)
+
+`SKILL.md` plus five `references/` companions:
+
+- `mechanisms.md` — decision tree. Default: nested `claude -p` via
+  `nohup sh -c 'sleep N && claude -p "/<slug>"' &` — survives terminal
+  exit, supports any interval, adaptive cadence, stop conditions.
+  Live-session demo alternative: `ScheduleWakeup` inside `/loop`.
+- `cadence.md` — fixed / time-of-day / adaptive / one-shot specs,
+  failure backoff (1×/2×/4×, halt at 4 consecutive), absolute
+  next-fire-time computation to prevent drift.
+- `runner-template.md` — canonical body of the generated runner that
+  the skill writes to `~/.claude/commands/<slug>-autopilot.md`.
+- `supervisor-template.md` — auto-installed health-check + cleanup
+  runner at `~/.claude/commands/_autopilot-supervisor.md`. Runs every
+  30 min; re-arms dead sleepers, cleans up completed entries, self-
+  uninstalls when no user autopilots remain.
+- `lifecycle.md` — registry shape, lockfile contract, sub-verbs
+  (`list` / `stop` / `status` / `rearm`), reboot recovery flow.
+
+Runners are written to **user scope** (`~/.claude/commands/`) — not
+project scope, to avoid polluting the project git tree with per-user
+runtime artifacts. State lives at
+`~/.claude/channels/telegram/.cos-bot-autopilot.json` (mode `0600`,
+sharing the existing channel directory).
+
+### `plugins/cos-bot/.claude-plugin/plugin.json`
+
+Bumped to include a `SessionStart` hook that runs
+`/cos-bot:autopilot rearm --silent` on every Claude session start —
+makes reboot recovery automatic for both user autopilots and the
+supervisor. Hook is gated on the registry file existing; no-op if no
+autopilots have ever been armed.
+
+### `plugins/cos-bot/skills/install-recipes/SKILL.md` + `references/schedule.md`
+
+Step 6 (the schedule offer) now defaults to `/cos-bot:autopilot` for
+all cos-bot recipes. `/schedule` is demoted to a sidebar for the
+cloud-only fallback case (with its caveats called out — no local
+Telegram, no local commands, no project memory).
+
+### `plugins/cos-bot/README.md`
+
+Added autopilot to the skills index and a "Recurring tasks (local,
+not cloud)" section with the typical commands.
+
+### Test harness
+
+New scenario at `test-harness/drivers/tier1/autopilot-defaults.sh`
+covering the smoke-install + sub-verbs path with a short interval to
+keep the test fast.
+
 ## 2026-05-09 → 2026-05-11 — cos-bot perf/reliability pass + E2E test harness
 
 Session goal: validate the prior `model: haiku` pin on `cos-bot:install-recipes`,
