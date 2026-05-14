@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-05-14 — gws-proxy: account-setup walkthrough doc
+
+Adds `plugins/gws-proxy/docs/account-setup.md`, a human-facing companion to
+the `add-account` skill spec. Sets expectations for a first run of
+`/gws-proxy:add-account`: the end-to-end flow, which alarming-looking
+warnings ("Google hasn't verified this app", the `403` IAM error, "Access
+blocked: your administrator…") are expected vs. real blockers and what to
+do about each, the end-state files, and how to use the `/<alias>` command
+afterward. Linked from both the gws-proxy plugin README (Installation,
+Adding more accounts, Troubleshooting) and the root README's gws-proxy
+section. Docs-only — no version bump.
+
 ## 2026-05-14 — cos-bot 0.3.0: /cos-bot:install-memory skill
 
 Adds `/cos-bot:install-memory`, a guided installer for a Markdown-first

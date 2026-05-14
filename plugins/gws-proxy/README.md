@@ -43,6 +43,9 @@ Then add your first account (positional args optional — prompts if missing):
 It installs the gws CLI if needed, places the bundled OAuth client, opens a
 browser for consent, and wires up the slash command. ~2 minutes.
 
+First time? **[Walk through your first account setup →](docs/account-setup.md)**
+— what to expect, and which scary-looking warnings are normal.
+
 ## Prerequisites
 
 1. **macOS or Linux** with either Homebrew or npm (Node ≥ 18) available so
@@ -95,10 +98,15 @@ Just re-run with a different alias:
 Each alias gets its own config dir, wrapper, and slash command. They're
 independent — logging out of one doesn't affect the others.
 
+See the [account-setup walkthrough](docs/account-setup.md) for the full
+flow and the warnings you'll hit.
+
 ## Troubleshooting
 
 See the failure-modes table at the bottom of
-[`skills/add-account/SKILL.md`](./skills/add-account/SKILL.md).
+[`skills/add-account/SKILL.md`](./skills/add-account/SKILL.md), or the
+[account-setup walkthrough](docs/account-setup.md) § *Warnings you'll see*
+for the common ones explained in plain terms.
 
 ## For the plugin owner
 

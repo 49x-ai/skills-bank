@@ -101,6 +101,8 @@ own config dir, wrapper, and `/<alias>` command:
 
 [Read the gws-proxy README →](plugins/gws-proxy/)
 
+First time? [Step-by-step account setup →](plugins/gws-proxy/docs/account-setup.md)
+
 > Requires your email to be granted `serviceUsageConsumer` on the
 > `gws-proxy-49x` GCP project — the plugin owner handles that
 > out-of-band. `gcloud` is **not** required; the OAuth flow runs
