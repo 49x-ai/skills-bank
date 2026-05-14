@@ -220,8 +220,15 @@ If you want to know what's happening:
   transforms, writes personalized command files into
   `<your-project>/.claude/commands/`, persists answers as typed memory
   so future sessions inherit them, and offers to schedule the routines
-  via `/schedule`. Pass `all` for stock defaults, a single slug for one
-  recipe, or no arguments for the full interactive flow.
+  via `/cos-bot:autopilot` (local, self-rescheduling — `/schedule` is a
+  cloud-only fallback). Pass `all` for stock defaults, a single slug for
+  one recipe, or no arguments for the full interactive flow.
+- **`/cos-bot:install-memory`** copies a Markdown memory system from
+  content bundled with the plugin into a self-contained `memory/` folder
+  at your project root — preset-driven (Minimal / Standard / Full),
+  never overwrites existing memory files, and offers a recurring
+  `/compact-memory` routine via `/cos-bot:autopilot`. Standalone; pass a
+  preset name for a no-questions fast install.
 
 ## What's bundled
 
