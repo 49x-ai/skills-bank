@@ -675,8 +675,9 @@ default settings (5a), then walk through the relaunch options (5b).
 
 ### Step 5a — write default settings
 
-Follow `setup/DEFAULT_SETTINGS.md` to merge the two defaults
-(`env.MCP_TIMEOUT = "60000"` and the Telegram MCP allow rule) into
+Follow `setup/DEFAULT_SETTINGS.md` to merge the three defaults
+(`env.MCP_TIMEOUT = "60000"`, the Telegram MCP allow rule, and the
+scoped `Bash(...)` STT rules for voice-note transcription) into
 `~/.claude/settings.json`. The procedure is idempotent and prints
 back to the user exactly what changed (or what was left alone).
 Then proceed to 5b.

@@ -83,6 +83,10 @@ gets processed. The reply leads with `captured to
 brain-dumps/<filename>`, then carries on with whatever you actually
 asked.
 
+Send a Telegram voice note and the bot transcribes it itself —
+auto-installing a speech-to-text tool the first time if you don't have
+one — then runs the transcript through the same capture flow.
+
 On by default. To turn it off:
 `/cos-bot:install-recipes persona tune` → set "Brain-dump capture" to
 off. Short messages and slash commands aren't captured.

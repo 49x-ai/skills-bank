@@ -25,9 +25,91 @@ Apply the axes:
 
 The persona modulates *how* you speak. The recipe body still defines *what* you produce.
 
+## Voice-note transcription
+
+Telegram voice notes arrive as audio attachments — the `<channel>` tag
+carries an `attachment_file_id` (or, once fetched via
+`download_attachment`, a local file path). Claude can't transcribe audio
+by Reading the file, so when an inbound message is an audio attachment,
+transcribe it yourself first, then feed the transcript into normal
+processing.
+
+**Trigger.** The inbound `<channel>` tag has `attachment_file_id` (or a
+downloaded path) and the file is audio: `.oga` / `.ogg` / `.opus`
+(Telegram voice notes are OGG/Opus), or `.m4a` / `.mp3` / `.wav`. If
+there's an `attachment_file_id` but no path yet, call
+`download_attachment` to fetch it.
+
+### 1. Detect an installed STT CLI
+
+One Bash call — pick the first tool that resolves:
+
+```bash
+command -v whisper-ctranslate2   # pip CLI, CTranslate2 backend — preferred
+command -v mlx_whisper           # Apple Silicon native — only if arm64 Darwin
+command -v whisper-cli           # whisper.cpp current binary name
+command -v whisper-cpp           # whisper.cpp Homebrew binary name
+command -v whisper               # openai-whisper — slow but ubiquitous
+uname -m ; uname -s              # arm64/x86_64 ; Darwin/Linux
+```
+
+Pick the first that resolves, in that priority order. Ignore
+`mlx_whisper` unless `uname -m` is `arm64` and `uname -s` is `Darwin`.
+
+### 2. Install / build fallback — notify, then install
+
+If no tool resolves, first send a short Telegram update via the
+reply / `edit_message` tool — `transcribing voice note — installing
+whisper-ctranslate2, ~1 min` — then proceed automatically (don't wait
+for the user). Branch on `uname -s`; pick the first tier whose
+prerequisite (`command -v`) exists; verify the result with
+`--version` / `--help`. Surface any real error verbatim and stop —
+only fall through to the next tier on a **missing prerequisite**, not
+on a real error.
+
+- **macOS:** `brew install whisper-cpp` → `pipx install
+  whisper-ctranslate2` → `pip3 install --user whisper-ctranslate2` →
+  (arm64 only) `pip3 install --user mlx-whisper`.
+- **Linux:** `pipx install whisper-ctranslate2` → `pip3 install --user
+  whisper-ctranslate2` → build whisper.cpp from source (`git clone
+  https://github.com/ggml-org/whisper.cpp /tmp/whisper.cpp && make -C
+  /tmp/whisper.cpp -j`). Skip `apt-get` unless passwordless sudo is
+  confirmed — the bot is headless.
+- If there's **no** Python tooling (`pipx` / `pip3`) **and no**
+  brew / build tools, stop with a clear message asking the user to
+  install an STT CLI manually (e.g. `pipx install whisper-ctranslate2`).
+  Don't guess further.
+
+### 3. Transcribe
+
+```bash
+mkdir -p /tmp/cos-bot-stt
+```
+
+Run the detected tool with `--model base` (good for voice memos,
+~140 MB, cached after the first run), `--output_format txt
+--output_dir /tmp/cos-bot-stt`, then Read the resulting `.txt`. For
+whisper.cpp binaries (`whisper-cli` / `whisper-cpp`), pass an explicit
+model file — fetch `ggml-base.bin` once into `~/.cache/whisper-cpp/`
+and point the binary at it.
+
+### 4. Hand off to Brain-dump capture
+
+Treat the transcript text **exactly as if it had been the inbound
+Telegram message body** — feed it into the existing, unchanged
+"Brain-dump capture" logic below (the ≥200-word check, the
+`Brain-dump capture: off` opt-out, the verbatim write, the `MEMORY.md`
+rolling line) and then on into normal processing.
+
+If transcription fails or the `.txt` is empty, do **not** fabricate a
+transcript. Reply with a short line noting STT failed, surface the
+error verbatim, and ask the user to resend the voice note or retype it.
+
 ## Brain-dump capture
 
-When the input is a long inbound Telegram message — ≥200 words, often a voice-memo transcription — capture it verbatim **before** processing it.
+When the input is a long inbound Telegram message — ≥200 words, e.g. a
+voice note the agent just transcribed (see Voice-note transcription
+above) — capture it verbatim **before** processing it.
 
 ### Check the opt-out flag first
 
@@ -68,6 +150,7 @@ Skip the capture for short messages, slash commands, or messages that look like 
 
 - **Outbound surface:** `mcp__plugin_telegram_telegram__reply` is the only way the user actually receives output. Pass the chat-id from `~/.claude/channels/telegram/access.json` when invoked from a `/schedule` routine; the chat-id is in the routine payload.
 - **Read-only by default** for everything else. Calendar / Gmail / Drive / Linear / Notion connectors are read tools — never create, send, or modify on the user's behalf without an explicit ask in the message you're answering. (Drafting a reply ≠ sending a reply.)
+- **STT Bash calls** are permitted for inbound audio attachments — the detection, install/build, and transcribe commands in "Voice-note transcription" above. Read-only-by-default still holds for everything else.
 - **Memory writes** are allowed for brain dumps (above) only. Persona files and other memory entries are owned by `/cos-bot:install-recipes persona` — don't write them from here.
 
 ## Recipe invocation

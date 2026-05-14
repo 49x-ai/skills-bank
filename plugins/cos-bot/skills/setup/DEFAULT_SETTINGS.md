@@ -1,6 +1,6 @@
 # Default settings for the Telegram channel
 
-Step 5a of `setup/SKILL.md` and `connect/SKILL.md` writes two
+Step 5a of `setup/SKILL.md` and `connect/SKILL.md` writes three
 defaults to `~/.claude/settings.json` so the bot is friction-free
 once the user relaunches with `--channels`:
 
@@ -12,6 +12,12 @@ once the user relaunches with `--channels`:
    pre-approves all Telegram MCP tools (`reply`, `react`,
    `edit_message`, `download_attachment`) so chatting with the bot
    doesn't trigger a permission prompt on every message.
+3. A scoped set of `permissions.allow` `Bash(...)` entries for the
+   speech-to-text flow — the chief-of-staff agent transcribes inbound
+   Telegram voice notes itself (detect / install / transcribe an STT
+   CLI), and a headless bot can't answer permission prompts. The
+   entries are kept narrow (specific package and tool names, not a
+   broad `Bash(pip3 install *)`).
 
 Both writes are idempotent and non-destructive: this file is also
 the "I ran it twice" path. The merge never deletes other keys, never
@@ -56,7 +62,35 @@ just in the directory where the install ran. This matches how
    - Otherwise → append `"mcp__plugin_telegram_telegram__*"` to the
      end of the array, preserving existing entries and order.
 
-4. **Write back.** Preserve every other key (other env vars,
+4. **STT Bash rules decision.** The speech-to-text flow needs these
+   scoped `permissions.allow` entries:
+
+   ```
+   Bash(command *)
+   Bash(uname *)
+   Bash(whisper-ctranslate2 *)
+   Bash(whisper *)
+   Bash(whisper-cli *)
+   Bash(whisper-cpp *)
+   Bash(mlx_whisper *)
+   Bash(brew install whisper-cpp)
+   Bash(pipx install whisper-ctranslate2)
+   Bash(pip3 install --user whisper-ctranslate2)
+   Bash(pip3 install --user mlx-whisper)
+   ```
+
+   For each entry, look at `permissions.allow` (same `[]` fallback as
+   step 3):
+   - Already present verbatim → skip it.
+   - Already covered by a broader entry the user set (e.g. `Bash(*)`,
+     or `Bash(pip3 install *)` covering the `pip3` entries) → skip it.
+     Be conservative — only skip on a clearly broader wildcard.
+   - Otherwise → append it to the end of the array, preserving
+     existing entries and order.
+
+   Append only the missing ones; a re-run adds nothing.
+
+5. **Write back.** Preserve every other key (other env vars,
    `permissions.deny`, `permissions.ask`, `hooks`, `model`,
    anything else) byte-for-byte where possible. Pretty-print with
    2-space indent and a trailing newline to match the conventional
@@ -66,9 +100,9 @@ just in the directory where the install ran. This matches how
      block, the whole `permissions.allow` array). This minimizes
      diff churn.
    - If the file did not exist: use Write with a fresh JSON object
-     containing only the two defaults.
+     containing only the three defaults.
 
-5. **Print to the user verbatim**, substituting actuals based on
+6. **Print to the user verbatim**, substituting actuals based on
    what changed:
 
    > Wrote default settings to `~/.claude/settings.json`:
@@ -77,9 +111,12 @@ just in the directory where the install ran. This matches how
    > - `permissions.allow += "mcp__plugin_telegram_telegram__*"` —
    >   auto-approves Telegram tools so chatting with the bot doesn't
    >   prompt
+   > - `permissions.allow += <N>` scoped `Bash(...)` STT rules —
+   >   lets the bot detect, install, and run a speech-to-text CLI to
+   >   transcribe voice notes without a permission prompt
    >
-   > These take effect on the next session. If either was already
-   > set (or already broader), it was left untouched.
+   > These take effect on the next session. Anything already set (or
+   > already broader) was left untouched.
 
    If one or both were already in place, replace the corresponding
    bullet with `already set, left untouched` and the actual current
@@ -89,8 +126,9 @@ just in the directory where the install ran. This matches how
 
 ## What this procedure does NOT do
 
-- Does not write any `Bash(...)` allow rules. Only the Telegram MCP
-  wildcard.
+- Writes only the scoped STT `Bash(...)` allow rules listed in step 4
+  (specific tool and package names) and the Telegram MCP wildcard — no
+  broad `Bash(*)` rule, and no other allow rules of any kind.
 - Does not touch project `.claude/settings.json` or
   `.claude/settings.local.json`.
 - Does not remove anything on a re-run or on uninstall — additions
