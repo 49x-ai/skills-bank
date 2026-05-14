@@ -29,7 +29,7 @@ Stepped, resumable orchestration that picks among the five expansion-pack
 recipes, asks a small profile pass once, asks per-recipe deltas, applies
 deterministic transforms to the canonical recipe bodies, writes them to
 `<project>/.claude/commands/`, persists durable answers as typed memory,
-and offers to schedule the routines via `/schedule`.
+and offers to schedule the routines via `/cos-bot:autopilot`.
 
 This skill also owns persona writes for the `chief-of-staff` sub-agent
 via the `persona` argument dispatch (preset picker + per-axis tuning).

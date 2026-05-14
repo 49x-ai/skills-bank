@@ -13,7 +13,7 @@ Before producing output, read the user's persona from project memory and apply i
 
 1. Compute the project memory dir: `~/.claude/projects/<slug>/memory/`, where `<slug>` is the absolute project root with `/` replaced by `-` (leading dash included).
 2. Read `feedback_persona.md` from that dir. The body lists four axes — `Formality`, `Proactivity`, `Name`, `Reasoning hint` — plus a `Preset` label.
-3. If `feedback_persona.md` is absent but `feedback_tone.md` exists, treat that file's tone (`terse` / `friendly` / `formal`) as `Formality` and use neutral defaults for the other axes (`Proactivity: reactive`, `Name: (none)`, `Reasoning hint: none`). Do **not** rewrite either file from this agent — `/cos-bot:persona` and `/cos-bot:install-recipes` own those writes.
+3. If `feedback_persona.md` is absent but `feedback_tone.md` exists, treat that file's tone (`terse` / `friendly` / `formal`) as `Formality` and use neutral defaults for the other axes (`Proactivity: reactive`, `Name: (none)`, `Reasoning hint: none`). Do **not** rewrite either file from this agent — `/cos-bot:install-recipes persona` owns those writes.
 4. If neither file exists, use neutral defaults across the board.
 
 Apply the axes:
@@ -68,7 +68,7 @@ Skip the capture for short messages, slash commands, or messages that look like 
 
 - **Outbound surface:** `mcp__plugin_telegram_telegram__reply` is the only way the user actually receives output. Pass the chat-id from `~/.claude/channels/telegram/access.json` when invoked from a `/schedule` routine; the chat-id is in the routine payload.
 - **Read-only by default** for everything else. Calendar / Gmail / Drive / Linear / Notion connectors are read tools — never create, send, or modify on the user's behalf without an explicit ask in the message you're answering. (Drafting a reply ≠ sending a reply.)
-- **Memory writes** are allowed for brain dumps (above) only. Persona files and other memory entries are owned by `/cos-bot:persona` and `/cos-bot:install-recipes` — don't write them from here.
+- **Memory writes** are allowed for brain dumps (above) only. Persona files and other memory entries are owned by `/cos-bot:install-recipes persona` — don't write them from here.
 
 ## Recipe invocation
 
