@@ -30,6 +30,11 @@ allowed-tools:
   - Bash(env *)
   - Bash(uname *)
   - Bash(printenv *)
+  - Bash(curl *)
+  - Bash(sleep *)
+  - Bash(nohup *)
+  - Bash(tail *)
+  - Bash(kill *)
 ---
 
 # /gws-proxy:add-account — add a gws profile
@@ -121,8 +126,13 @@ If both the config dir AND `credentials.enc` exist for this alias, run:
 
 ```bash
 env GOOGLE_WORKSPACE_CLI_CONFIG_DIR="$HOME/.config/gws-$ALIAS" \
+  GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file \
   gws gmail users getProfile --params '{"userId":"me"}'
 ```
+
+The `KEYRING_BACKEND=file` env var is required: this skill stores
+credentials with the file backend (see step 5), and they're unreadable
+without it.
 
 - If success AND `emailAddress` matches `$EMAIL` → already configured;
   jump to step 8 (re-create wrapper + slash command idempotently in case
@@ -160,37 +170,95 @@ cp "${CLAUDE_PLUGIN_ROOT}/skills/add-account/references/client_secret.json" \
    "$HOME/.config/gws-$ALIAS/client_secret.json"
 ```
 
-## Step 5 — Run OAuth consent (user runs this in their terminal)
+## Step 5 — Run OAuth consent (headless, skill-driven)
 
-`gws auth login` opens a browser and waits on a localhost callback. The
-**user must run it from their terminal** (the `!` prefix in the prompt sends
-output back to this session). Tell them to paste:
+`gws auth login` opens a browser and waits on a localhost callback. On a
+headless box reached only over chat, there's no browser and no way to land
+that callback locally. So the skill drives the whole exchange **on the box**
+and only hands the human-browser step to the user. No SSH, no
+port-forwarding.
 
+The listener (started in 5a) and the `curl` that completes it (5c) both run
+on the box; only the sign-in (5b) happens in the user's own browser.
+
+### Step 5a — Start the login listener in the background
+
+```bash
+LOG="$HOME/.config/gws-$ALIAS/auth.log"
+rm -f "$LOG"
+nohup env GOOGLE_WORKSPACE_CLI_CONFIG_DIR="$HOME/.config/gws-$ALIAS" \
+  GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file \
+  gws auth login -s gmail,calendar,drive >"$LOG" 2>&1 &
+echo "AUTH_PID=$!"
 ```
-! GOOGLE_WORKSPACE_CLI_CONFIG_DIR="$HOME/.config/gws-<alias>" gws auth login -s gmail,calendar,drive
+
+`KEYRING_BACKEND=file` is required — the OS keyring isn't available
+headless. Credentials land at `~/.config/gws-<alias>/.encryption_key` +
+`credentials.enc`. Cache `AUTH_PID` so you can `kill` it later if it hangs.
+
+### Step 5b — Send the user the auth URL
+
+Poll the log until the Google auth URL appears:
+
+```bash
+for i in $(seq 1 30); do
+  grep -om1 'https://accounts.google.com/[^[:space:]]*' "$LOG" && break
+  sleep 1
+done
 ```
 
-Substitute the real alias.
+If no URL shows up within ~30s, `cat "$LOG"` and surface the contents — the
+login process likely failed to start. Otherwise send the URL to the user
+with these instructions:
 
-Expected browser flow:
-1. URL prints; the browser auto-opens or they click the link.
+1. Open the URL in **any browser** — laptop or phone, doesn't have to be the
+   box.
 2. Sign in as **the email from step 1** (this is what gets stored).
 3. "Google hasn't verified this app" warning appears — **Advanced → Go to
    gws CLI proxy (unsafe)**. The app is published but not Google-verified;
    safe for internal use.
 4. Approve gmail/calendar/drive scopes.
-5. Terminal prints `"status": "success"`.
+5. The browser then tries to load `http://localhost:<port>/?code=...` and
+   **fails to connect** — "this site can't be reached" is *expected*, the
+   listener is on the box, not their machine.
+6. They copy the **full URL from the address bar** (the whole
+   `http://localhost:...` string, including `?code=...`) and paste it back
+   into this chat.
 
 If they hit `Access blocked: your administrator has disabled sign-in...` —
 their Workspace admin blocks unverified third-party apps. No plugin-side fix;
 they need their admin or a different account.
 
-Wait for the user's reply with the output before continuing.
+Wait for the user to paste the localhost URL before continuing.
+
+### Step 5c — Complete the token exchange on the box
+
+`curl` the pasted URL on the box — it hits the still-waiting listener from
+5a and completes the OAuth token exchange:
+
+```bash
+curl -s "<the-localhost-url-the-user-pasted>"
+```
+
+Quote the URL exactly as pasted. The `code` and `state` params must arrive
+intact.
+
+### Step 5d — Verify the exchange landed
+
+```bash
+grep -q '"status": "success"' "$LOG" && echo "AUTH_OK" || cat "$LOG"
+```
+
+- `AUTH_OK` → the background process exits on its own; move to step 6.
+- No success line → surface the log. Common causes: the user pasted a stale
+  or partial URL, or signed in as the wrong account. If the listener is
+  still running, `kill "$AUTH_PID"` and restart from 5a.
 
 ## Step 6 — Verify auth landed
 
 ```bash
 env GOOGLE_WORKSPACE_CLI_CONFIG_DIR="$HOME/.config/gws-$ALIAS" \
+  GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file \
   gws gmail users getProfile --params '{"userId":"me"}'
 ```
 
@@ -212,8 +280,13 @@ Write `~/.local/bin/gws-<alias>` (substitute real alias):
 
 ```bash
 #!/usr/bin/env bash
-exec env GOOGLE_WORKSPACE_CLI_CONFIG_DIR="$HOME/.config/gws-<alias>" gws "$@"
+exec env GOOGLE_WORKSPACE_CLI_CONFIG_DIR="$HOME/.config/gws-<alias>" \
+  GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file \
+  gws "$@"
 ```
+
+`KEYRING_BACKEND=file` must match what step 5 used to store the
+credentials — without it the wrapper can't read them back.
 
 ```bash
 chmod +x "$HOME/.local/bin/gws-$ALIAS"
@@ -271,8 +344,11 @@ Add another account: /gws-proxy:add-account <other-alias> <other-email>
 | `Access blocked: your administrator has disabled sign-in...` | Workspace policy blocks unverified apps. Admin allowlist or use a personal account. |
 | `Caller does not have required permission to use project gws-proxy-49x` | IAM grant missing. User pings plugin owner; owner runs `gcloud projects add-iam-policy-binding gws-proxy-49x --member="user:<email>" --role="roles/serviceusage.serviceUsageConsumer" --account=49xemailproxy@gmail.com --condition=None`. |
 | `gws-<alias>: command not found` | `~/.local/bin` not on PATH. `export PATH="$HOME/.local/bin:$PATH"` in shell rc, restart terminal. |
-| `gws auth status` shows no session after restart | OS keyring may have been reset. Re-run step 5. |
-| Headless / keyring locked | `export GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file` then redo step 5. Credentials then live at `~/.config/gws-<alias>/.encryption_key`. |
+| `gws auth status` shows no session after restart | Re-run the skill — step 5 re-auths. The file-backend key lives at `~/.config/gws-<alias>/.encryption_key`; if that file was deleted, the stored credentials can't be decrypted. |
+| No auth URL in `auth.log` within ~30s (step 5b) | The background `gws auth login` failed to start. `cat` the log; usual cause is a missing/malformed `client_secret.json` — redo step 4, then 5a. |
+| Browser shows "this site can't be reached" after approving scopes | **Expected** — the localhost listener is on the box, not the user's machine. They copy the full `http://localhost:...?code=...` URL from the address bar and paste it back; step 5c curls it on the box. |
+| `curl` of the pasted URL returns nothing and no `"status": "success"` lands | Stale or partial URL, or the listener already exited. `kill "$AUTH_PID"` if still running and restart from 5a; make sure the user pastes the **entire** address-bar URL. |
+| Credentials unreadable / keyring error when running the wrapper | The wrapper or a verify command is missing `GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file`. Step 5 stores creds with the file backend, so every read needs that env var — check step 7's wrapper. |
 
 ## Idempotency
 

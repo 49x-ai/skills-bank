@@ -67,9 +67,10 @@ From there the skill runs the flow itself:
 3. **Places `client_secret.json`** — drops the shared OAuth client into
    `~/.config/gws-<alias>/`.
 4. **Browser OAuth consent** — *this is the one step you actively
-   perform.* The skill hands you a command to paste into your terminal;
-   it opens a browser, you sign in and approve scopes. Details in the
-   next section.
+   perform.* The skill starts the sign-in itself and sends you a Google
+   auth URL. You open it in any browser, sign in, and approve scopes —
+   then paste one URL back. Details in
+   [the next section](#the-sign-in-step-what-you-actually-do).
 5. **Verifies the sign-in landed** by fetching your Gmail profile and
    checking the email matches.
 6. **Creates the wrapper + slash command** — `~/.local/bin/gws-<alias>`
@@ -79,6 +80,38 @@ From there the skill runs the flow itself:
 
 When it's done you get a summary listing your account, config dir,
 wrapper, and slash command.
+
+## The sign-in step (what you actually do)
+
+This is the only step you perform by hand, and it works even when the
+machine running the skill has no browser of its own (a headless box you
+reach over chat, say). The skill handles both ends of the OAuth exchange
+on that machine — you just supply the browser.
+
+Here's the exchange, start to finish:
+
+1. **The skill sends you a URL.** It has already started the Google
+   sign-in in the background and pulled the auth URL out for you.
+2. **You open it in any browser** — your laptop, your phone, whatever.
+   It does not have to be on the same machine as the skill.
+3. **You sign in** as the account you're setting up, click through the
+   "Google hasn't verified this app" warning
+   ([this is expected](#google-hasnt-verified-this-app)), and approve the
+   gmail/calendar/drive scopes.
+4. **The browser then fails to load a page** — the address bar shows
+   something like `http://localhost:53682/?code=...` and the browser says
+   "this site can't be reached." **This is expected and means it
+   worked.** That localhost address belongs to a listener on the skill's
+   machine, not yours, so your browser can't reach it — but the URL it
+   tried to load carries the authorization code.
+5. **You copy that whole failed URL** out of the address bar and paste it
+   back into the chat.
+6. **The skill finishes the exchange** by fetching that URL itself, on
+   its machine, where the listener is actually waiting.
+
+The one thing to get right: in step 5, copy the **entire** address-bar
+URL, including everything after the `?`. A partial paste won't complete
+the sign-in.
 
 ## Warnings you'll see (and what they mean)
 
@@ -132,21 +165,32 @@ policy blocking unverified third-party apps. The plugin can't work around
 it. Your options: use a personal Google account instead, or ask your
 Workspace admin to allowlist the app.
 
-### Headless or locked keyring
+### "This site can't be reached" after approving scopes
 
-If you're on a headless machine, or the OS keyring isn't available, the
-sign-in step may not be able to store credentials. Set
-`GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file` before running the OAuth
-command and credentials will be stored in a file
-(`~/.config/gws-<alias>/.encryption_key`) instead of the system keyring.
+**Expected — it means the sign-in worked.** See
+[the sign-in step](#the-sign-in-step-what-you-actually-do) above: that
+failed-to-load `http://localhost:...` page is the handoff point. Copy the
+full URL from the address bar and paste it back.
+
+### Where credentials are stored
+
+The skill stores your OAuth credentials with the gws CLI's **file
+keyring backend**, not the OS keyring — that's what lets the flow work on
+a headless machine. Your encrypted refresh tokens live in
+`~/.config/gws-<alias>/credentials.enc` and the key that decrypts them in
+`~/.config/gws-<alias>/.encryption_key`. The wrapper script sets
+`GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file` so every `gws-<alias>` call
+can read them back; don't delete `.encryption_key` or the credentials
+become unrecoverable and you'll need to re-run the skill.
 
 ## What you end up with
 
 For the alias `<alias>`, setup leaves you with:
 
 - **`~/.config/gws-<alias>/`** — the config dir, holding the shared
-  `client_secret.json` and your encrypted OAuth refresh tokens
-  (`credentials.enc`).
+  `client_secret.json`, your encrypted OAuth refresh tokens
+  (`credentials.enc`), and the file-backend key that decrypts them
+  (`.encryption_key`).
 - **`~/.local/bin/gws-<alias>`** — a small wrapper script that runs `gws`
   pointed at that config dir.
 - **`~/.claude/commands/<alias>.md`** — a Claude Code slash command,

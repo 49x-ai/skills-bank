@@ -40,8 +40,9 @@ Then add your first account (positional args optional — prompts if missing):
 /gws-proxy:add-account personal                 # alias upfront, asks for email
 ```
 
-It installs the gws CLI if needed, places the bundled OAuth client, opens a
-browser for consent, and wires up the slash command. ~2 minutes.
+It installs the gws CLI if needed, places the bundled OAuth client, drives
+the OAuth consent flow (it sends you an auth URL to open in any browser —
+works even on a headless box), and wires up the slash command. ~2 minutes.
 
 First time? **[Walk through your first account setup →](docs/account-setup.md)**
 — what to expect, and which scary-looking warnings are normal.
@@ -72,9 +73,11 @@ nothing in install depends on it.
   `gws-proxy-49x` GCP project.
 - The OAuth client's `client_secret.json` is embedded in this plugin (Desktop
   OAuth clients are not actually secret — per spec, they can't be).
-- When you sign in, **your** Google account's refresh tokens are stored in
-  **your** keyring under `~/.config/gws-<alias>/credentials.enc`. The plugin
-  owner never sees your tokens or data.
+- When you sign in, **your** Google account's refresh tokens are encrypted
+  and stored on **your** machine under `~/.config/gws-<alias>/credentials.enc`
+  (with the decryption key alongside in `.encryption_key` — the gws CLI's
+  file keyring backend, which keeps the flow working on headless boxes). The
+  plugin owner never sees your tokens or data.
 - API calls go directly from your machine to Google with your tokens. The
   `gws-proxy-49x` project only matters for OAuth identity + API quota; it
   has no access to your data.
