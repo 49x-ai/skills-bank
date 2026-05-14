@@ -87,6 +87,44 @@ On by default. To turn it off:
 `/cos-bot:install-recipes persona tune` → set "Brain-dump capture" to
 off. Short messages and slash commands aren't captured.
 
+## A memory system, not just a transcript
+
+Brain-dump capture saves raw inbound messages. A *memory system* is the
+curated, durable layer on top — a `memory/` folder at your project root
+the bot reads before meaningful work and writes back to over time.
+
+```
+/cos-bot:install-memory             # guided — pick a preset, toggle folders
+/cos-bot:install-memory standard    # fast install, no questions
+/cos-bot:install-memory minimal     # just MEMORY.md, active.md, inbox/
+/cos-bot:install-memory full        # people, companies, prompts, archive, search
+```
+
+It installs a self-contained tree at your project root:
+
+```
+memory/
+  MEMORY.md       index + folder guide
+  active.md       current focus, open loops
+  decisions.md    durable decisions + rationale
+  workflows.md    recurring ways of working
+  projects/  people/  companies/  prompts/
+  inbox/          freeform capture — monthly YYYY-MM.md files
+  archive/        stale memory, excluded from search
+PROTOCOL.md       how the bot should use memory
+scripts/memory-search.sh   ripgrep over memory/
+```
+
+Three presets — **Minimal**, **Standard** (default), **Full** — then a
+multi-select to toggle individual folders. The installer **never
+overwrites an existing memory file**: re-run it any time to add
+components, and your curated content is safe. It also offers a recurring
+`/compact-memory` routine (via `/cos-bot:autopilot`) that folds your
+inbox into durable files on a weekly cadence.
+
+Standalone — run it whenever; it isn't part of the `/cos-bot:start`
+chain.
+
 ## Running the bot
 
 For DMs to actually reach Claude, launch with the channels flag:
@@ -99,7 +137,7 @@ claude --channels plugin:telegram@claude-plugins-official
 for you if it's available. Without the flag, the Telegram MCP server
 isn't running and your bot stays silent.
 
-## The five skills
+## The skills
 
 `/cos-bot:start` is the only one most users need. The rest are also
 user-invocable for re-runs and edge cases.
@@ -110,6 +148,7 @@ user-invocable for re-runs and edge cases.
 | `/cos-bot:setup` | You don't have a bot yet (drives BotFather end-to-end) |
 | `/cos-bot:connect` | You have a BotFather token already (fast path) |
 | `/cos-bot:install-recipes` | Drop the recipe slash-commands into your project |
+| `/cos-bot:install-memory` | Install a Markdown memory system at your project root |
 | `/cos-bot:demo` | Fire one recipe right now and DM the result |
 | `/cos-bot:autopilot` | Put a recipe on a local self-rescheduling loop (`daily 9am`, `every 2h`, adaptive, etc.) — survives terminal exit |
 

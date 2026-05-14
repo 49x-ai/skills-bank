@@ -1,5 +1,67 @@
 # Changelog
 
+## 2026-05-14 — cos-bot 0.3.0: /cos-bot:install-memory skill
+
+Adds `/cos-bot:install-memory`, a guided installer for a Markdown-first
+memory system — a self-contained `memory/` folder at the project root
+(plus `PROTOCOL.md`, an optional `scripts/memory-search.sh`, and an
+optional recurring compaction routine). Adapted from the
+`markdown-memory-kit` reference design. Standalone — not chained into
+`/cos-bot:start`.
+
+Mirrors `/cos-bot:install-recipes`'s stepped/resumable/defaults-first
+orchestration: argument dispatch, a `0600` state file, a `Step 0a`
+tool-denial early abort, and a `Step F` fast-install path. Its
+overriding invariant: **never overwrite an existing memory file** —
+every write is skip-if-exists, so re-runs only add missing components
+and curated user content is always safe.
+
+### `plugins/cos-bot/memory-kit/` (new)
+
+Bundled canonical content — the plugin's source of truth, like
+`recipes/`. `PROTOCOL.md`, the `memory/` templates (`MEMORY.md`,
+`active.md`, `decisions.md`, `workflows.md`, and `projects/` / `people/`
+/ `companies/` / `prompts/` example files), and `scripts/memory-search.sh`.
+`inbox/` and `archive/` have no template — they're created at install
+time (`inbox/` seeded with the current month's `YYYY-MM.md`).
+
+### `plugins/cos-bot/skills/install-memory/` (new)
+
+`SKILL.md` plus two `references/` companions:
+
+- `structure.md` — preset → component map (Minimal / Standard / Full),
+  the `MEMORY.md` folder-guide assembly rule, file shapes, the
+  `<!-- cos-bot:memory -->` `./CLAUDE.md` managed-block convention, and
+  the skip-if-exists safety invariants.
+- `schedule.md` — the `/compact-memory` command body, the compaction
+  cadence table, and the `/cos-bot:autopilot` nested-dispatch pattern
+  (adapted from `install-recipes/references/schedule.md`).
+
+Customization UX is presets + toggles: a preset single-select, then a
+multi-select of optional components pre-checked to the preset's
+baseline. `inbox/` ships in every preset as the single freeform-capture
+mechanism, so the compaction-routine offer always applies.
+
+### `plugins/cos-bot/.claude-plugin/plugin.json`
+
+Version `0.2.2 → 0.3.0`; description mentions `/cos-bot:install-memory`.
+
+### `.claude-plugin/marketplace.json`
+
+cos-bot `description` + `version` updated to `0.3.0`; `metadata.version`
+`0.2.0 → 0.3.0`.
+
+### `plugins/cos-bot/README.md`
+
+New "A memory system, not just a transcript" section; `install-memory`
+added to the skills index.
+
+### Test harness
+
+New scenario at `test-harness/drivers/tier1/install-memory-defaults.sh`
+covering the `standard` fast-install path — file presence, the pruned
+`MEMORY.md` folder guide, and the Haiku model pin.
+
 ## 2026-05-13 — cos-bot autopilot skill (local self-rescheduling recipes)
 
 Adds `/cos-bot:autopilot`, a meta-skill that puts any cos-bot recipe

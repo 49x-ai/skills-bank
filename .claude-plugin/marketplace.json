@@ -3,13 +3,13 @@
   "owner": { "name": "49x-ai" },
   "metadata": {
     "description": "Workflow plugins from 49x.ai for operators — Telegram bots, Chief-of-Staff routines, and other custom AI workflows.",
-    "version": "0.2.0"
+    "version": "0.3.0"
   },
   "plugins": [
     {
       "name": "cos-bot",
-      "description": "A Telegram bot that's also a Chief of Staff. Five recipes (/prep, /inbox-triage, /awaiting, /who, /catchup), three voice presets, brain-dump capture. /cos-bot:start dispatches the right next command.",
-      "version": "0.2.2",
+      "description": "A Telegram bot that's also a Chief of Staff. Five recipes (/prep, /inbox-triage, /awaiting, /who, /catchup), three voice presets, brain-dump capture, and a Markdown-first memory system (/cos-bot:install-memory). /cos-bot:start dispatches the right next command.",
+      "version": "0.3.0",
       "author": { "name": "49x.ai" },
       "source": "./plugins/cos-bot",
       "category": "channels",
